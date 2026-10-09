@@ -14,7 +14,7 @@ const KEYS: Record<SourceRow["kind"], string[]> = {
     "itemSelector", "linkSelector", "titleSelector", "publishedAtSelector", "publishedAtRegex", "publishedAtUtcOffset",
   ],
   json_list: [
-    ...COLLECTED, "url", "mode", "method", "headers", "bodyJson", "jsonKey", "windowVar", "itemsPath", "itemsObjectValues",
+    ...COLLECTED, "url", "mode", "method", "headers", "bodyJson", "jsonKey", "windowVar", "itemsPath", "itemsObjectValues", "itemsLimit",
     "titlePaths", "summaryPaths", "summaryIsBody", "authorPaths", "publishedAtPath", "publishedAtUnit", "publishedAtUtcOffset", "externalIdPath",
     "urlTemplate", "urlTemplateFallback", "rawDropKeys", "requireBoolean", "minNumeric",
   ],

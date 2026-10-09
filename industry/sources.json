@@ -466,6 +466,7 @@
         "url": "https://news.10jqka.com.cn/tapp/news/push/stock/?page=1&pagesize=30&tag=&track=website",
         "mode": "json_api",
         "itemsPath": "data.list",
+        "itemsLimit": 10,
         "titlePaths": ["title"],
         "urlTemplate": "{raw:url}",
         "summaryPaths": ["digest"],
@@ -502,6 +503,7 @@
           "accept": "application/json"
         },
         "itemsPath": "data",
+        "itemsLimit": 10,
         "titlePaths": ["data.content"],
         "urlTemplate": "https://flash.jin10.com/detail/{id}",
         "summaryPaths": ["data.content"],

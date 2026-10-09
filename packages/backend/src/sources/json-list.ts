@@ -172,9 +172,10 @@ export async function fetchJsonList(source: SourceRow): Promise<Candidate[]> {
   let items = c.itemsPath ? getPath(data, c.itemsPath) : c.jsonKey ? getPath(data, c.jsonKey) : data;
   if (c.itemsObjectValues && items && typeof items === "object" && !Array.isArray(items)) items = Object.values(items);
   if (!Array.isArray(items)) throw new FetchError("items path did not resolve to an array");
+  const itemArray = c.itemsLimit ? (items as unknown[]).slice(0, Number(c.itemsLimit)) : (items as unknown[]);
 
   const out: Candidate[] = [];
-  for (const item of items) {
+  for (const item of itemArray) {
     if (c.requireBoolean && getPath(item, c.requireBoolean.path) !== c.requireBoolean.equals) continue;
     if (c.minNumeric && !(Number(getPath(item, c.minNumeric.path)) >= Number(c.minNumeric.min))) continue;
     const title = firstString(item, c.titlePaths);
@@ -194,6 +195,6 @@ export async function fetchJsonList(source: SourceRow): Promise<Candidate[]> {
       raw: { externalId: externalId ?? null },
     });
   }
-  if (items.length > 0 && out.length === 0 && !c.requireBoolean && !c.minNumeric) throw new FetchError("no items mapped (check title/url paths)");
+  if (itemArray.length > 0 && out.length === 0 && !c.requireBoolean && !c.minNumeric) throw new FetchError("no items mapped (check title/url paths)");
   return out;
 }
