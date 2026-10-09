@@ -9,7 +9,8 @@ services:
     runtime: node
     plan: free
     region: ohio
-    buildCommand: npm ci && npm run build -w @aihot/web
+    # react-router CLI 与 vite 在 devDependencies，构建需要它们，生产安装要显式带上
+  buildCommand: npm ci --include=dev && npm run build -w @aihot/web
     startCommand: bash scripts/render-start.sh
     healthCheckPath: /api/health
     envVars:
