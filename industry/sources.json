@@ -1,5 +1,5 @@
 {
-  "$comment": "示范信源：首次启动时导入（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里新建、修改和暂停。字段说明见 docs/customize.md。全部为公开 RSS，不需要任何付费 API 或 key；BLS 之外的信源地址均已实际抓取验证过（2026-10）。美联储与 BLS 的 .gov 官方源在本仓库演示环境中网络不可达，上线后请在后台“信源”页试抓确认。",
+  "$comment": "示范信源：首次启动时导入（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里新建、修改和暂停。字段说明见 docs/customize.md。RSS 信源全部为公开 RSS，不需要任何付费 API 或 key；同花顺 7x24 是公开 JSON 接口。BLS 之外的 RSS 信源地址均已实际抓取验证过（2026-10）。美联储与 BLS 的 .gov 官方源在本仓库演示环境中网络不可达，上线后请在后台“信源”页试抓确认。",
   "sources": [
     {
       "id": "rss-fed-press",
@@ -285,6 +285,241 @@
       "tags": [
         "媒体",
         "快讯"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-bea-news",
+      "name": "美国经济分析局（BEA）",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://apps.bea.gov/rss/rss.xml",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方",
+        "数据"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-sec-press",
+      "name": "美国证交会（SEC）新闻稿",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.sec.gov/news/pressreleases.rss",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方",
+        "监管"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-boe-news",
+      "name": "英国央行新闻",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.bankofengland.co.uk/rss/news",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-wallstreetcn",
+      "name": "华尔街见闻快讯",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://dedicated.wallstreetcn.com/rss.xml",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "媒体",
+        "快讯",
+        "宏观"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-forexlive",
+      "name": "ForexLive",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.forexlive.com/feed/news",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体",
+        "外汇",
+        "快讯"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-yahoo-sp500",
+      "name": "Yahoo Finance 标普 500",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体",
+        "美股"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-marketwatch-pulse",
+      "name": "MarketWatch 实时快讯",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://feeds.marketwatch.com/marketwatch/marketpulse/",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "媒体",
+        "快讯"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-economist-finance",
+      "name": "经济学人 · 财经",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.economist.com/finance-and-economics/rss.xml",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 240,
+      "tags": [
+        "媒体",
+        "观点"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "json-10jqka-flash",
+      "name": "同花顺 7x24 快讯",
+      "kind": "json_list",
+      "config": {
+        "url": "https://news.10jqka.com.cn/tapp/news/push/stock/?page=1&pagesize=30&tag=&track=website",
+        "mode": "json_api",
+        "itemsPath": "data.list",
+        "titlePaths": ["title"],
+        "urlTemplate": "{raw:url}",
+        "summaryPaths": ["digest"],
+        "summaryIsBody": true,
+        "publishedAtPath": "ctime",
+        "publishedAtUnit": "epoch_s",
+        "externalIdPath": "id",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 15,
+      "tags": [
+        "快讯",
+        "A股"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "json-jin10-flash",
+      "name": "金十快讯",
+      "kind": "json_list",
+      "config": {
+        "url": "https://flash-api.jin10.com/get_flash_list?channel=-8200&vip=0",
+        "mode": "json_api",
+        "headers": {
+          "x-app-id": "rU6QIu7JHe2gOUeR",
+          "x-version": "1.0.0",
+          "x-csrf-token": "BLACKHOLE",
+          "accept": "application/json"
+        },
+        "itemsPath": "data",
+        "titlePaths": ["data.content"],
+        "urlTemplate": "https://flash.jin10.com/detail/{id}",
+        "summaryPaths": ["data.content"],
+        "summaryIsBody": true,
+        "publishedAtPath": "time",
+        "publishedAtUtcOffset": "+08:00",
+        "externalIdPath": "id",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 15,
+      "tags": [
+        "快讯",
+        "宏观"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false

@@ -19,14 +19,14 @@ export const EDITION_WHEN = {
 
 export const SITE = {
   /** 站名：导航、页面标题、分享图、RSS、MCP、后台都用它。 */
-  name: "环球市场情报",
+  name: "FI HOT",
   /**
    * 行业词：拼进默认说法里，比如“市场日报”“市场动态”。
    * 改成“黄金”“宏观”之类，页面上就会变成“黄金日报”“黄金动态”。
    */
   subject: "市场",
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
-  homeTitle: "环球市场情报 — 全球金融市场要闻 · 每日精选与日报",
+  homeTitle: "FI HOT — 全球金融市场要闻 · 每日精选与日报",
   /** 主题目录页（/topics）的标题。 */
   topicsTitle: "市场主题：公司与机构、资产与宏观、内容形态的最新动态",
   /** 反馈表单输入框里的示例。 */
@@ -39,7 +39,7 @@ export const SITE = {
   description: `从全球财经信源里挑出影响市场的要事，把同一事件的多篇报道归到一起，${EDITION_WHEN.daily} 出一份日报。`,
   /** llms.txt 里一句话介绍下面的一段详细介绍（选填）。 */
   llmsIntro:
-    "环球市场情报面向个人投资者，聚合全球金融新闻：模型先筛掉重复与噪声，再评估市场影响、来源可信度与时效，重点覆盖美股与纳斯达克、宏观经济、美联储与利率、通胀、国债与美元、大型科技公司财报和市场风险。本站只聚合新闻与事件分析，不提供实时行情，也不构成投资建议。",
+    "FI HOT 面向个人投资者，聚合全球金融新闻：模型先筛掉重复与噪声，再评估市场影响、来源可信度与时效，重点覆盖美股与纳斯达克、宏观经济、美联储与利率、通胀、国债与美元、大型科技公司财报和市场风险。本站只聚合新闻与事件分析，不提供实时行情，也不构成投资建议。",
   /** 一行小字：分享图、海报下方。 */
   tagline: "看懂影响市场的要事",
   /** 搜索引擎读到的关键词（首页结构化数据）。 */
@@ -56,7 +56,7 @@ export const SITE = {
    * MCP 工具名的前缀（小写字母、数字、下划线），工具会叫 gmi_get_latest、gmi_search……
    * 已经有人接入后就不要再改。
    */
-  mcpPrefix: "gmi",
+  mcpPrefix: "fi_hot",
   /**
    * 公开接口（MCP、OpenAPI、llms.txt）的版本号，只升不降。
    * 改了接口里已有的字段或含义时升主版本，并在部署说明里写清。
@@ -72,12 +72,12 @@ export const SITE = {
   github: null as string | null,
   /** 结构化数据里的网站运营者（搜索引擎用）。 */
   organization: {
-    name: "环球市场情报",
+    name: "FI HOT",
     /** 创始人（选填）。 */
     founder: null as null | { name: string; alternateName?: string; jobTitle?: string; description?: string; url?: string },
   },
   /** 抓取信源时报上的名字和版本（User-Agent 里用），不要冒用别的站。 */
-  crawlerName: "GlobalMarketIntelBot/1.0",
+  crawlerName: "FiHotBot/1.0",
 } as const;
 
 /** 使用规则和隐私说明两页（正文在 pages/ 里）。 */
