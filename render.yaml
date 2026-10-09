@@ -19,7 +19,6 @@ services:
     region: singapore
     buildCommand: npm ci
     startCommand: API_HOST=0.0.0.0 API_PORT=$PORT NODE_ENV=production node --env-file-if-exists=.env apps/api/src/main.ts
-    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "24"
@@ -85,8 +84,8 @@ services:
     plan: free
     region: singapore
     buildCommand: npm ci && npm run build -w @aihot/web
-    preDeployCommand: node --env-file-if-exists=.env scripts/migrate.ts && node --env-file-if-exists=.env scripts/seed.ts
-    startCommand: WEB_HOST=0.0.0.0 WEB_PORT=$PORT API_BASE_URL=http://$API_HOST:$API_PORT TRUST_PROXY=true node --env-file-if-exists=.env apps/web/server.ts
+    # 免费档不支持 preDeploy：迁移和种子并进入启动命令（迁移有账本、种子幂等，重复执行安全）
+    startCommand: node --env-file-if-exists=.env scripts/migrate.ts && node --env-file-if-exists=.env scripts/seed.ts && WEB_HOST=0.0.0.0 WEB_PORT=$PORT API_BASE_URL=http://$API_HOST:$API_PORT TRUST_PROXY=true node --env-file-if-exists=.env apps/web/server.ts
     envVars:
       - key: NODE_VERSION
         value: "24"
@@ -98,8 +97,8 @@ services:
       - key: API_HOST
         fromService:
           name: fi-hot-api
-          type: host
+          property: host
       - key: API_PORT
         fromService:
           name: fi-hot-api
-          type: port
+          property: port
