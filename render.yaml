@@ -8,7 +8,7 @@ services:
     name: fi-hot
     runtime: node
     plan: free
-    region: singapore
+    region: ohio
     buildCommand: npm ci && npm run build -w @aihot/web
     startCommand: bash scripts/render-start.sh
     healthCheckPath: /api/health
