@@ -32,7 +32,7 @@ const provider = await stub(async (_hit, req) => {
     hold.entered.open();
     await hold.release.promise;
   }
-  return { id: "local", choices: [{ message: { content: JSON.stringify({ title: "OpenAI 发布 Dots", digest: "Dots 的对话可用，但自主执行任务仍然消耗额度。", latest: "模型生成的无关最新进展不得使用" }) } }], usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 } };
+  return { id: "local", choices: [{ message: { content: JSON.stringify({ title: "苹果 发布 iPhone 新品", digest: "iPhone 新品的对话可用，但自主执行任务仍然消耗额度。", latest: "模型生成的无关最新进展不得使用" }) } }], usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 } };
 });
 process.env.DEEPSEEK_BASE_URL = `${provider.url}/v1`;
 process.env.DEEPSEEK_API_KEY = "test-key";
@@ -44,10 +44,10 @@ async function source(suffix: string, tier: string, owner: string | null = null,
     VALUES (${id},${suffix},'rss',${tier},'editorial',${owner},${sql.json(role ? { publisherRole: role } : {})},${tier !== 'T1'},'2100-01-01')`;
   return id;
 }
-async function story(title = "OpenAI 发布 Dots") {
+async function story(title = "苹果 发布 iPhone 新品") {
   const [s] = await sql`INSERT INTO stories (public_id,title,first_report_at,latest_at,latest) VALUES (${randomUUID()},${title},${at(100)},${at(0)},'错误的生成进展') RETURNING id, public_id`;
   const [f] = await sql`INSERT INTO facts (public_id,story_id,title,subject,action,object,conditions)
-    VALUES (${`f-${randomUUID()}`},${s!.id},${title},'OpenAI','发布','Dots','自主执行任务消耗额度') RETURNING id, public_id`;
+    VALUES (${`f-${randomUUID()}`},${s!.id},${title},'苹果','发布','iPhone 新品','自主执行任务消耗额度') RETURNING id, public_id`;
   return { storyId: Number(s!.id), storyPublicId: s!.public_id as string, factId: Number(f!.id), factPublicId: f!.public_id as string };
 }
 async function report(sourceId: string, group: Awaited<ReturnType<typeof story>>, opts: { title: string; hours: number; selected?: boolean; score?: number; role?: string }) {
@@ -67,33 +67,33 @@ async function report(sourceId: string, group: Awaited<ReturnType<typeof story>>
 }
 
 test("source tier and event ownership are separate; mentions of an entity do not establish authority", () => {
-  const row = { body_mode: "full" as const, score: 70, timeline_at: now, source_tier: "T2", publisher_role: null, owner_entity_id: null, fact_subject: "OpenAI" };
-  const org = { ...row, source_tier: "T1_5", publisher_role: "organization", owner_entity_id: "openai", score: 60 };
+  const row = { body_mode: "full" as const, score: 70, timeline_at: now, source_tier: "T2", publisher_role: null, owner_entity_id: null, fact_subject: "Apple" };
+  const org = { ...row, source_tier: "T1_5", publisher_role: "organization", owner_entity_id: "apple", score: 60 };
   const person = { ...org, publisher_role: "person", score: 90 };
   assert.equal(pickRepresentative([person, org]), org);
   const first = { ...row, source_tier: "T1", score: 40, first_party: false };
   assert.equal(pickRepresentative([org, first]), first, "T1 does not depend on the first_party flag");
-  for (const subject of [null, "Databricks", "OpenAI合作伙伴", "Sam Altman (@sama)"]) {
+  for (const subject of [null, "Databricks", "微软合作伙伴", "黄仁勋 (@nvidia)"]) {
     assert.equal(representativePriority({ ...org, fact_subject: subject }), 3, String(subject));
   }
-  assert.equal(representativePriority({ ...org, fact_subject: "ChatGPT" }), 1, "exact configured product alias");
-  assert.equal(representativePriority({ ...org, fact_subject: "OpenAI / Anthropic" }), 1, "explicit co-subject list");
-  assert.equal(representativePriority({ ...org, owner_entity_id: "qwen", fact_subject: "Qwen Team" }), 1, "the company under another of its own names");
-  assert.equal(representativePriority({ ...org, owner_entity_id: "world-labs", fact_subject: "AMD + World Labs" }), 1);
-  assert.equal(representativePriority({ ...org, fact_subject: "OpenAI + " }), 3, "incomplete subject list is not evidence");
+  assert.equal(representativePriority({ ...org, fact_subject: "iPhone" }), 1, "exact configured product alias");
+  assert.equal(representativePriority({ ...org, fact_subject: "Apple / Microsoft" }), 1, "explicit co-subject list");
+  assert.equal(representativePriority({ ...org, owner_entity_id: "nvidia", fact_subject: "NVDA" }), 1, "the company under another of its own names");
+  assert.equal(representativePriority({ ...org, owner_entity_id: "apple", fact_subject: "AAPL + Microsoft" }), 1);
+  assert.equal(representativePriority({ ...org, fact_subject: "Apple + " }), 3, "incomplete subject list is not evidence");
   assert.equal(representativePriority({ ...org, owner_entity_id: null }), 3);
   assert.equal(representativePriority({ ...org, owner_entity_id: "unregistered-org", fact_subject: "unregistered-org" }), 3, "equal unknown strings are not verified identity");
-  assert.equal(representativePriority({ ...org, fact_subject: "OpenAI + unregistered-org" }), 3, "an unrecognized co-subject is not silently accepted");
+  assert.equal(representativePriority({ ...org, fact_subject: "Microsoft + unregistered-org" }), 3, "an unrecognized co-subject is not silently accepted");
   assert.equal(representativePriority({ ...row, first_party: true } as typeof row), 3, "the first_party flag never elevates a source");
 });
 
 test("mentions cannot choose a timeline origin, anchor, representative, or a latest-progress link", async () => {
-  const organization = await source("organization", "T1_5", "openai", "organization");
+  const organization = await source("organization", "T1_5", "apple", "organization");
   const media = await source("media", "T2");
   const t1 = await source("t1", "T1");
   const g = await story();
-  const official = await report(organization, g, { title: "Dots 正式发布", hours: 3, score: 65 });
-  const latest = await report(media, g, { title: "Dots 后续更新", hours: 2, score: 90 });
+  const official = await report(organization, g, { title: "iPhone 新品 正式发布", hours: 3, score: 65 });
+  const latest = await report(media, g, { title: "iPhone 新品 后续更新", hours: 2, score: 90 });
   const earlyMention = await report(t1, g, { title: "EARLY ROUNDUP", hours: 90, role: "mention" });
   const lateMention = await report(t1, g, { title: "LATEST ROUNDUP", hours: 1, role: "mention" });
   await report(t1, g, { title: "未入选官网稿", hours: 4, selected: false, score: 30 });
@@ -110,7 +110,7 @@ test("mentions cannot choose a timeline origin, anchor, representative, or a lat
   assert.equal(detail.developments[0]!.representative.id, official, "unselected T1 cannot enter the selected representative pool");
   assert.equal(detail.firstReportAt, at(4).toISOString());
   assert.deepEqual(detail.latestReport, { id: latest });
-  assert.equal(detail.latest, "Dots 后续更新");
+  assert.equal(detail.latest, "iPhone 新品 后续更新");
   assert.equal(detail.officialReports.length, 1, "only tier T1 has the first-party label");
   assert.equal(detail.developments[0]!.representative.source.firstParty, false);
   const edition = await candidates(at(100), now);
@@ -120,7 +120,7 @@ test("mentions cannot choose a timeline origin, anchor, representative, or a lat
   await sql`UPDATE publications SET visibility='withdrawn' WHERE article_id=${latest}`;
   const after = (await loadStoryDetail(g.storyId, now))!;
   assert.equal(after.latestReport!.id, official);
-  assert.equal(after.latest, "Dots 正式发布");
+  assert.equal(after.latest, "iPhone 新品 正式发布");
   assert.equal((await v1Story(g.storyId))!.story.latest, after.latest);
   const firstParty = await loadTimeline({ ...q, channel: "firstParty" });
   assert.ok(!firstParty.cards.some(c => c.item.id === official), "a stale true projection flag cannot put T1_5 into first-party channel");
@@ -172,7 +172,7 @@ test("website and machine stories choose the same latest development and archive
 test("digest input excludes mentions, preserves scoped conditions, and ignores generated latest", async () => {
   const s = await source("digest", "T1");
   const g = await story();
-  const main = await report(s, g, { title: "Dots 任务仍计费用量", hours: 5 });
+  const main = await report(s, g, { title: "iPhone 新品 任务仍计费用量", hours: 5 });
   const mention = await report(s, g, { title: "MENTION MUST NOT ENTER DIGEST", hours: 1, role: "mention" });
   const composite = await report(s, g, { title: "COMPOSITE WAITING FOR GROUP CLEANUP", hours: 1 });
   await sql`UPDATE analyses SET output=output || '{"scope":"composite"}'::jsonb WHERE article_id=${composite}`;
@@ -182,7 +182,7 @@ test("digest input excludes mentions, preserves scoped conditions, and ignores g
   assert.ok(!digestPrompt.includes(mention) && !digestPrompt.includes("MENTION MUST NOT ENTER DIGEST"));
   assert.ok(!digestPrompt.includes(composite), "known composite input is excluded before its stale hard membership is cleaned");
   const [stored] = await sql`SELECT latest FROM stories WHERE id=${g.storyId}`;
-  assert.equal(stored!.latest, "Dots 任务仍计费用量");
+  assert.equal(stored!.latest, "iPhone 新品 任务仍计费用量");
   const calls = provider.hits();
   assert.equal((await composeStoryDigest(g.storyId)).updated, false);
   assert.equal(provider.hits(), calls);
@@ -210,7 +210,7 @@ test("digest input excludes mentions, preserves scoped conditions, and ignores g
 test("rewriting a story digest uses the current reports and prompt and is audited", async () => {
   const s = await source("digest-rewrite", "T1");
   const g = await story();
-  await report(s, g, { title: "Dots 对话不计费", hours: 3 });
+  await report(s, g, { title: "iPhone 新品 对话不计费", hours: 3 });
   assert.equal((await composeStoryDigest(g.storyId)).updated, true);
   const calls = provider.hits();
   assert.equal((await composeStoryDigest(g.storyId)).updated, false, "unchanged reports keep the digest");
@@ -339,23 +339,23 @@ test("the hot board shows an event under its own title, linked to the fact most 
   const s = await source("hot", "T2");
   const official = await source("hot-official", "T1");
   const other = await source("hot-other", "T2");
-  const g = await story("OpenAI 发布 Dots");
-  const fact = async (title: string) => Number((await sql`INSERT INTO facts (public_id,story_id,title,subject) VALUES (${`f-${randomUUID()}`},${g.storyId},${title},'OpenAI') RETURNING id`)[0]!.id);
+  const g = await story("苹果 发布 iPhone 新品");
+  const fact = async (title: string) => Number((await sql`INSERT INTO facts (public_id,story_id,title,subject) VALUES (${`f-${randomUUID()}`},${g.storyId},${title},'苹果') RETURNING id`)[0]!.id);
   // A leak opens the story and a single follow-up scores highest; the launch is what two sources report.
-  const leak = await report(s, { ...g, factId: await fact("OpenAI 常驻助手曝光") }, { title: "发布前的爆料", hours: 30, score: 99 });
-  const media = await report(s, g, { title: "Dots 媒体报道", hours: 4, score: 90 });
-  const blog = await report(official, g, { title: "Dots 官网发布", hours: 3, score: 60 });
+  const leak = await report(s, { ...g, factId: await fact("苹果 常驻助手曝光") }, { title: "发布前的爆料", hours: 30, score: 99 });
+  const media = await report(s, g, { title: "iPhone 新品 媒体报道", hours: 4, score: 90 });
+  const blog = await report(official, g, { title: "iPhone 新品 官网发布", hours: 3, score: 60 });
   const followUp = await report(other, { ...g, factId: await fact("ChatGPT Space 新进展") }, { title: "Space 高分报道", hours: 2, score: 99 });
   for (const [i, id] of [leak, media, blog, followUp].entries()) await sql`INSERT INTO story_signals (story_id,article_id,source_id,participant_key,kind,observed_at)
     VALUES (${g.storyId},${id},(SELECT source_id FROM articles WHERE id=${id}),${`${key}-participant-${i}`},'editorial',${at(1)})`;
   await computeHotRanking(now);
   const entry = (await latestHotRanking())!.entries.find(e => e.storyId === g.storyId)!;
   assert.ok(entry);
-  assert.equal(entry.title, "OpenAI 发布 Dots");
+  assert.equal(entry.title, "苹果 发布 iPhone 新品");
   assert.equal(entry.representativeItemId, blog, "the launch's first-party report, not the earlier leak or a later high score");
   assert.equal(entry.participantCount, 3, "heat still counts each source once");
-  await sql`UPDATE stories SET title='OpenAI 发布常驻智能体 Dots' WHERE id=${g.storyId}`;
-  assert.equal((await latestHotRanking())!.entries.find(e => e.storyId === g.storyId)!.title, "OpenAI 发布常驻智能体 Dots", "a retitled event shows at once");
+  await sql`UPDATE stories SET title='苹果 发布常驻智能体 iPhone 新品' WHERE id=${g.storyId}`;
+  assert.equal((await latestHotRanking())!.entries.find(e => e.storyId === g.storyId)!.title, "苹果 发布常驻智能体 iPhone 新品", "a retitled event shows at once");
   await sql`UPDATE fact_articles SET role='mention' WHERE article_id=${blog}`;
   assert.ok(!(await latestHotRanking())!.entries.some(e => e.storyId === g.storyId), "regrouped or mention-only representatives leave cached rankings immediately");
 });
@@ -386,9 +386,9 @@ test("hot exits date latest progress by current event evidence after a withdrawa
 
 test("an editor moves a report into the fact it repeats: no false development remains and the membership is the editor's", async () => {
   const s = await source("move", "T1");
-  const g = await story("OpenAI 发布 GPT-6.1 Sol");
+  const g = await story("苹果 发布 GPT-6.1 Sol");
   const launch = await report(s, g, { title: "Sol 官网发布", hours: 6 });
-  const [dup] = await sql`INSERT INTO facts (public_id,story_id,title,subject) VALUES (${`f-${randomUUID()}`},${g.storyId},'OpenAI发布GPT-6.1 Sol模型','OpenAI') RETURNING id`;
+  const [dup] = await sql`INSERT INTO facts (public_id,story_id,title,subject) VALUES (${`f-${randomUUID()}`},${g.storyId},'苹果发布GPT-6.1 Sol模型','苹果') RETURNING id`;
   const repost = await report(s, { ...g, factId: Number(dup!.id) }, { title: "官方线程里的重复发布", hours: 1 });
   await sql`INSERT INTO story_signals (story_id,article_id,source_id,participant_key,kind,observed_at) VALUES (${g.storyId},${repost},${s},${`source:${s}`},'editorial',${at(1)})`;
   // Moving re-derives the publication from its analysis, which carries no test tag: read the unfiltered timeline.
@@ -409,7 +409,7 @@ test("an in-flight digest cannot overwrite an editor revision or a merge, and it
   const s = await source('digest-concurrency', 'T1');
   for (const merge of [false, true]) {
     const g = await story();
-    await report(s, g, {title:'Dots 的同一条真实报道',hours:1});
+    await report(s, g, {title:'iPhone 新品的同一条真实报道',hours:1});
     const target = merge ? await story('人工合并目标') : null;
     const entered = gate(), release = gate();
     digestHold = {entered,release};

@@ -1,0 +1,16 @@
+{
+  "name": "@aihot/market-today",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*.ts",
+    "./web": "./web.tsx"
+  },
+  "dependencies": {
+    "@aihot/backend": "*",
+    "@aihot/contracts": "*",
+    "@aihot/site": "*",
+    "@aihot/web": "*",
+    "zod": "4.6.5"
+  }
+}

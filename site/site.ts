@@ -6,6 +6,7 @@
  * 日报、周报、月报什么时候出（北京时间，HH:mm）：日报收这个时间之前的 24 小时，周报在每个自然周之后的周一出，
  * 月报在每月 1 日出。排程、成刊时间窗口、缺期告警和所有提到时间的文案都读它（public/ 里的文件写占位
  * {{dailyTime}}、{{weeklyTime}}、{{monthlyTime}}）；排程每半小时检查一次，所以写整点或半点。
+ * 日报 08:00 出，收完隔夜美股收盘与亚洲早盘。
  */
 export const EDITION_TIMES = { daily: "08:00", weekly: "10:00", monthly: "10:30" };
 
@@ -18,16 +19,16 @@ export const EDITION_WHEN = {
 
 export const SITE = {
   /** 站名：导航、页面标题、分享图、RSS、MCP、后台都用它。 */
-  name: "MyHOT",
+  name: "环球市场情报",
   /**
-   * 行业词：拼进默认说法里，比如“AI 日报”“AI 动态”。
-   * 改成“法律”“HR”“黄金”之类，页面上就会变成“法律日报”“法律动态”。
+   * 行业词：拼进默认说法里，比如“市场日报”“市场动态”。
+   * 改成“黄金”“宏观”之类，页面上就会变成“黄金日报”“黄金动态”。
    */
-  subject: "AI",
+  subject: "市场",
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
-  homeTitle: "MyHOT — AI 行业动态 · 每日精选与日报",
+  homeTitle: "环球市场情报 — 全球金融市场要闻 · 每日精选与日报",
   /** 主题目录页（/topics）的标题。 */
-  topicsTitle: "AI 主题：公司与模型、技术方向、内容形态的最新动态",
+  topicsTitle: "市场主题：公司与机构、资产与宏观、内容形态的最新动态",
   /** 反馈表单输入框里的示例。 */
   feedbackExample: "例如：我在搜索某个关键词时遇到……我原本想……",
   /** 反馈页标题下面的一句话。 */
@@ -35,13 +36,14 @@ export const SITE = {
   /** 反馈表单邮箱框里的提示。 */
   feedbackEmailHint: "留下邮箱，我们可以回信联系你",
   /** 一句话介绍：搜索引擎、分享卡片、RSS、llms.txt 会用。 */
-  description: `从一批 AI 信源里挑出值得看的动态，把同一件事的多篇报道归到一起，${EDITION_WHEN.daily} 出一份日报。`,
+  description: `从全球财经信源里挑出影响市场的要事，把同一事件的多篇报道归到一起，${EDITION_WHEN.daily} 出一份日报。`,
   /** llms.txt 里一句话介绍下面的一段详细介绍（选填）。 */
-  llmsIntro: null as string | null,
+  llmsIntro:
+    "环球市场情报面向个人投资者，聚合全球金融新闻：模型先筛掉重复与噪声，再评估市场影响、来源可信度与时效，重点覆盖美股与纳斯达克、宏观经济、美联储与利率、通胀、国债与美元、大型科技公司财报和市场风险。本站只聚合新闻与事件分析，不提供实时行情，也不构成投资建议。",
   /** 一行小字：分享图、海报下方。 */
-  tagline: "值得关注的 AI 动态",
+  tagline: "看懂影响市场的要事",
   /** 搜索引擎读到的关键词（首页结构化数据）。 */
-  keywords: ["AI 资讯", "AI 新闻", "AI 日报", "AI 行业动态"] as string[],
+  keywords: ["全球市场", "美股", "纳斯达克", "QQQ", "宏观经济", "美联储", "利率", "通胀", "公司财报", "市场风险"] as string[],
   /** 网站开始收录的年份（结构化数据的时间范围，选填）。 */
   since: null as string | null,
   /** 界面语言（HTML lang、og:locale）。 */
@@ -51,10 +53,10 @@ export const SITE = {
   /** 标准图标（favicon.ico、icon.png、icon-192.png、apple-icon.png、logo.svg）以外也放在网站根目录的图标，site/brand/ 里的文件名（选填）；manifest.webmanifest 或外站引用了它们时用。 */
   rootIcons: [] as string[],
   /**
-   * MCP 工具名的前缀（小写字母、数字、下划线），工具会叫 myhot_get_latest、myhot_search……
+   * MCP 工具名的前缀（小写字母、数字、下划线），工具会叫 gmi_get_latest、gmi_search……
    * 已经有人接入后就不要再改。
    */
-  mcpPrefix: "myhot",
+  mcpPrefix: "gmi",
   /**
    * 公开接口（MCP、OpenAPI、llms.txt）的版本号，只升不降。
    * 改了接口里已有的字段或含义时升主版本，并在部署说明里写清。
@@ -63,19 +65,19 @@ export const SITE = {
   /** 对外联系邮箱（选填）：llms.txt 和给 Agent 的使用说明里会写。 */
   contactEmail: null as string | null,
   /** 关于页底部的一行小字（选填）。 */
-  footerNote: "由 AIHOT 开源框架驱动",
+  footerNote: null as string | null,
   /** 中国大陆网站的 ICP 备案号（选填），填了就显示在侧栏底部和“我的”页底部，并链接到工信部备案系统。 */
   icp: null as string | null,
   /** 源码的 GitHub 仓库地址（选填），填了就在侧栏底部和“我的”页底部显示“GitHub 开源”。 */
   github: null as string | null,
   /** 结构化数据里的网站运营者（搜索引擎用）。 */
   organization: {
-    name: "MyHOT",
+    name: "环球市场情报",
     /** 创始人（选填）。 */
     founder: null as null | { name: string; alternateName?: string; jobTitle?: string; description?: string; url?: string },
   },
   /** 抓取信源时报上的名字和版本（User-Agent 里用），不要冒用别的站。 */
-  crawlerName: "MyHOTBot/1.0",
+  crawlerName: "GlobalMarketIntelBot/1.0",
 } as const;
 
 /** 使用规则和隐私说明两页（正文在 pages/ 里）。 */
@@ -134,15 +136,15 @@ export const ABOUT = {
   /** 页面描述（搜索结果、分享卡片）。 */
   description: `关于 ${SITE.name}：${SITE.description}`,
   /** 大标题：第一行正常颜色，第二行强调色。 */
-  headline: ["AI 圈每天都有新动静，", "值得看的，只有几条。"] as [string, string],
+  headline: ["全球市场每天都有大事，", "值得看的，只有几条。"] as [string, string],
   /** 标题下面的一段话。{sources} 会换成实时的信源数（两边自动加空格，所以 {sources} 两边不写空格）；统计没取到时换成 sourcesFallback。 */
   lead: `${SITE.name} 替你盯着{sources}个信源：抓取、归并、打分、精选，${EDITION_WHEN.daily} 出一份日报。免费，不用注册。`,
   sourcesFallback: "十几",
   /** 信源河动画下面的四个环节。 */
   steps: {
-    collect: "官方博客、媒体和个人的订阅源都在看；更新越勤的源看得越勤，最快 15 分钟看一次。",
+    collect: "央行官网、统计机构、交易所和全球财经媒体的订阅源都在看；更新越勤的源看得越勤，最快 15 分钟看一次。",
     store: "抓到的都存下来，同一件事的报道归到一起，热点榜就是从这里算出来的。",
-    select: `模型先看是不是这个行业的事、有没有实际信息，再写中文标题、摘要和${ITEM_COPY.reasonLabel}；营销稿和重复转发进不来。`,
+    select: `模型先看是不是影响市场的事、有没有实际信息，再写中文标题、摘要和${ITEM_COPY.reasonLabel}；无来源的传闻和重复转发进不来。`,
     publish: `${EDITION_WHEN.daily} 出日报，${EDITION_WHEN.weekly} 出周报，${EDITION_WHEN.monthly} 出月报。`,
   },
   /**
@@ -158,7 +160,7 @@ export const ABOUT = {
     feishu?: ContactCard;
   },
   /** 页面底部的版权与下架说明，中间接“反馈页”的链接。 */
-  copyright: [`${SITE.name} 是聚合摘要和阅读索引，原文版权归各来源所有。如果你是来源方，希望更正、下架或调整展示方式，可以通过`, "联系我们。"] as [string, string],
+  copyright: [`${SITE.name} 是聚合摘要和阅读索引，原文版权归各来源所有。本站不提供实时行情，内容不构成投资建议。如果你是来源方，希望更正、下架或调整展示方式，可以通过`, "联系我们。"] as [string, string],
   /** 页面底部“使用规则”链接的锚点 id（选填）：外部文档写死过这个锚点就填上，以后不要改。 */
   termsAnchor: null as string | null,
 } as const;
@@ -176,7 +178,7 @@ export const ADMIN = {
 /** Agent 接入页的示例。 */
 export const AGENT = {
   /** MCP 工具表里“搜索”一行：能搜什么、可以怎么问。 */
-  search: { scope: "按公司、产品、人物或话题搜最近 7 天", ask: "这家公司最近发了什么？" },
+  search: { scope: "按公司、指数、宏观话题或政策事件搜最近 7 天", ask: "美联储最近有什么动作？" },
 };
 
 /** 日报、周报、月报版面上的说法。 */
@@ -187,17 +189,17 @@ export const REPORTS = {
   motto: SITE.subject as string,
   /** 每种报告页面的描述（搜索结果、分享卡片），不带句号；llms.txt 介绍周报、月报时也用它。 */
   descriptions: {
-    daily: `${SITE.name} ${subjectAfter(`${EDITION_WHEN.daily}（北京时间）发布的`, "行业精编日报")}`,
-    weekly: subjectAfter("每周", "行业综合回顾"),
-    monthly: subjectAfter("每月", "行业盘点"),
+    daily: `${SITE.name} ${subjectAfter(`${EDITION_WHEN.daily}（北京时间）发布的`, "精编日报")}`,
+    weekly: subjectAfter("每周", "综合回顾"),
+    monthly: subjectAfter("每月", "盘点"),
   },
   /**
-   * 一期里的一条怎么称呼（“4 件大事”）：没有头条时的标题（“这一天的 4 件 AI 大事”）、报头和往期目录的条数、
+   * 一期里的一条怎么称呼（“4 件大事”）：没有头条时的标题（“这一天的 4 件市场大事”）、报头和往期目录的条数、
    * 周报月报没有总述时的那句话，以及订阅说明里的“按栏目分好的大事”都用它。
    */
   entry: { measure: "件", noun: "大事" },
   /** 报头上其余几个数字后面的说法；精选数和日报期数在关于页、主题页也这样写。 */
-  metricUnits: { sourcesCount: "个来源", firstPartyEvents: "件一手发布", selectedCount: "条精选", reportsCovered: "期日报" },
+  metricUnits: { sourcesCount: "个来源", firstPartyEvents: "件官方发布", selectedCount: "条精选", reportsCovered: "期日报" },
   /** 报告分享图上“共几条”的说法。 */
   shareUnit: "件大事",
   /** 日报时段内有资料经过评判、但没有新大事时的标题与导语。 */
@@ -234,10 +236,10 @@ export const COMMUNITY_FEEDS: { dev: string[]; hn: string[] } = {
 /** 各页分享图（/og/pages/*.png）上的文字。主题目录页的那张按主题数自动生成。 */
 export const CARDS: Record<string, { kicker: string; title: string; subtitle: string; accent?: "hot" | "amber" }> = {
   site: { kicker: subjectAfter("每日", "精选"), title: SITE.tagline, subtitle: SITE.description },
-  all: { kicker: subjectAfter("全部", "动态"), title: "所有信源的最新动态，一站看完", subtitle: "按时间汇总各信源的最新动态，可按类别与标签筛选。" },
-  hot: { kicker: "热点榜", title: "过去 48 小时，大家在讨论什么", subtitle: "热度指数、趋势与组成热度的公开来源。", accent: "hot" },
+  all: { kicker: subjectAfter("全部", "动态"), title: "全球财经信源的最新动态，一站看完", subtitle: "按时间汇总各信源的最新动态，可按类别与标签筛选。" },
+  hot: { kicker: "热点榜", title: "过去 48 小时，市场在讨论什么", subtitle: "热度指数、趋势与组成热度的公开来源。", accent: "hot" },
   daily: { kicker: withSubject("日报"), title: subjectAfter(`每天 ${spokenTime(EDITION_TIMES.daily)}，一份读得完的`, "日报"), subtitle: `${subjectAfter("前一天值得关注的", "动态")}。` },
-  weekly: { kicker: withSubject("周报"), title: `一周${REPORTS.entry.noun}，一次看清`, subtitle: "本周的主线、重要发布与值得回看的讨论。" },
+  weekly: { kicker: withSubject("周报"), title: `一周${REPORTS.entry.noun}，一次看清`, subtitle: "本周的主线、重要数据与值得回看的市场讨论。" },
   monthly: { kicker: withSubject("月报"), title: "一个月的变化", subtitle: "月度主线与关键事件回顾。" },
   about: { kicker: "关于", title: `关于 ${SITE.name}`, subtitle: SITE.description },
   terms: { kicker: "使用规则", title: `${SITE.name} 使用规则`, subtitle: "网页、API、RSS 与 MCP 的使用范围。" },
@@ -287,7 +289,7 @@ export const DEPLOYMENT = {
 /** RSS 订阅源的说明里随站点而变的说法。 */
 export const FEED_COPY = {
   /** “全部动态”源的说明里，除了未审内容、低相关条目和已合并重复条目，还写明不含的内容（选填）。 */
-  allLeavesOut: [] as string[],
+  allLeavesOut: ["实时行情与估值数据", "投资建议"] as string[],
 };
 
 /**
@@ -300,12 +302,12 @@ export const PUBLIC_CATEGORIES = {
   feedLabels: {},
 } as const;
 
-/** “AI 日报”这类说法：行业词和名词之间，英文词加空格，中文词不加。 */
+/** “市场日报”这类说法：行业词和名词之间，英文词加空格，中文词不加。 */
 export function withSubject(noun: string): string {
   return /[A-Za-z0-9]$/.test(SITE.subject) ? `${SITE.subject} ${noun}` : `${SITE.subject}${noun}`;
 }
 
-/** “按主题看 AI”“往期 AI 日报”这类说法：行业词接在中文后面，英文词前加空格，中文词不加；noun 照 withSubject 接上。 */
+/** “按主题看市场”“往期市场日报”这类说法：行业词接在中文后面，英文词前加空格，中文词不加；noun 照 withSubject 接上。 */
 export function subjectAfter(text: string, noun?: string): string {
   const gap = /^[A-Za-z0-9]/.test(SITE.subject) ? " " : "";
   return `${text}${gap}${noun ? withSubject(noun) : SITE.subject}`;

@@ -2,336 +2,290 @@
   "groups": [
     {
       "key": "company",
-      "name": "公司与模型",
-      "blurb": "按厂商追踪模型、产品与公司动态"
+      "name": "公司与机构",
+      "blurb": "按主体追踪央行、指数产品与大型上市公司的动态"
     },
     {
       "key": "field",
-      "name": "技术方向",
-      "blurb": "按技术领域深挖：Agent、多模态、具身智能……"
+      "name": "资产与宏观",
+      "blurb": "按资产和宏观变量深挖：利率、通胀、美元、黄金、科技股……"
     },
     {
       "key": "genre",
       "name": "内容形态",
-      "blurb": "按内容类型浏览：论文、教程、观点、政策……"
+      "blurb": "按内容类型浏览：数据、决议、财报、监管、观点……"
     }
   ],
   "topics": [
     {
-      "slug": "openai",
-      "name": "OpenAI / ChatGPT",
+      "slug": "fed",
+      "name": "美联储",
       "group": "company",
-      "entityId": "openai",
-      "definition": "OpenAI 的全部动态：GPT 系列模型、ChatGPT 与 Sora 产品、公司战略与人事的持续追踪。"
-    },
-    {
-      "slug": "anthropic",
-      "name": "Anthropic / Claude",
-      "group": "company",
-      "entityId": "anthropic",
-      "definition": "Anthropic 的全部动态：Claude 系列模型、Claude Code、安全研究路线与公司进展的持续追踪。"
-    },
-    {
-      "slug": "google",
-      "name": "Google / Gemini",
-      "group": "company",
-      "entityId": "google",
+      "entityId": "fed",
       "aliases": [
-        "DeepMind"
+        "FOMC"
       ],
-      "definition": "Google 与 DeepMind 的 AI 动态：Gemini 系列、Veo 视频模型、研究成果与产品生态的持续追踪。"
+      "definition": "美联储的全部动态：利率决议、点阵图与经济预测、缩表扩表、官员证词与资产负债表政策的持续追踪。"
     },
     {
-      "slug": "deepseek",
-      "name": "DeepSeek",
+      "slug": "nasdaq",
+      "name": "纳斯达克",
       "group": "company",
-      "entityId": "deepseek",
-      "definition": "DeepSeek（深度求索）的模型发布、开源权重、技术报告与 API 价格变化。"
+      "entityId": "nasdaq",
+      "definition": "纳斯达克市场与指数：纳指与纳指 100 的行情结构、上市规则、科技板块动向与交易所自身动态。"
     },
     {
-      "slug": "qwen",
-      "name": "千问 Qwen",
+      "slug": "qqq",
+      "name": "QQQ",
       "group": "company",
-      "entityId": "qwen",
-      "definition": "阿里千问 Qwen 系列的开源发布与迭代：从旗舰模型到端侧小模型的全谱系动态。"
+      "entityId": "qqq",
+      "definition": "Invesco QQQ Trust（纳指 100 ETF）：规模与份额变化、资金流向，以及它作为科技股风向标的相关报道。"
     },
     {
-      "slug": "kimi",
-      "name": "Kimi / 月之暗面",
+      "slug": "apple",
+      "name": "苹果 Apple",
       "group": "company",
-      "entityId": "kimi",
-      "definition": "月之暗面 Kimi 系列模型与产品动态：K 系列开源模型、长上下文技术与产品演进的追踪。"
-    },
-    {
-      "slug": "minimax",
-      "name": "MiniMax",
-      "group": "company",
-      "entityId": "minimax",
-      "definition": "MiniMax 的模型与产品动态：M 系列大模型、语音与多模态能力、开源与商业化进展。"
-    },
-    {
-      "slug": "zhipu",
-      "name": "智谱 GLM",
-      "group": "company",
-      "entityId": "zhipu",
-      "definition": "智谱的 GLM 系列模型动态：旗舰开源发布、代码与推理能力迭代、商业化与生态进展的追踪。"
-    },
-    {
-      "slug": "xai",
-      "name": "xAI / Grok",
-      "group": "company",
-      "entityId": "xai",
-      "definition": "马斯克 xAI 与 Grok 系列的全部动态：模型迭代、算力扩张与 X 平台整合的持续追踪。"
-    },
-    {
-      "slug": "meta",
-      "name": "Meta / Llama",
-      "group": "company",
-      "entityId": "meta",
-      "definition": "Meta 的 AI 动态：Llama 与 Muse 系列模型、超级智能实验室与 Meta AI 产品。"
+      "entityId": "apple",
+      "definition": "苹果的公司动态：季度财报与指引、iPhone 等硬件业务、服务收入与监管诉讼的影响。"
     },
     {
       "slug": "microsoft",
-      "name": "Microsoft / Copilot",
+      "name": "微软 Microsoft",
       "group": "company",
       "entityId": "microsoft",
-      "definition": "微软的 AI 布局：Copilot 全家桶、Azure AI 基础设施与 OpenAI 合作关系的持续追踪。"
+      "definition": "微软的公司动态：财报与 Azure 云业务、AI 投入的资本开支、监管审查与重大合作。"
     },
     {
       "slug": "nvidia",
-      "name": "NVIDIA 英伟达",
+      "name": "英伟达 NVIDIA",
       "group": "company",
       "entityId": "nvidia",
-      "definition": "英伟达的 AI 芯片与生态动态：GPU 新品、CUDA 生态、机器人平台与 AI 算力市场的风向。"
+      "definition": "英伟达的公司动态：财报与数据中心业务、AI 芯片供需与出口管制、对 AI 板块整体的风向标意义。"
     },
     {
-      "slug": "hugging-face",
-      "name": "Hugging Face",
+      "slug": "tesla",
+      "name": "特斯拉 Tesla",
       "group": "company",
-      "entityId": "hugging-face",
-      "definition": "Hugging Face 开源社区动态：热门模型与数据集、排行榜变化与开源生态的晴雨表。"
+      "entityId": "tesla",
+      "definition": "特斯拉的公司动态：交付量与财报、车型与产能变化、自动驾驶进展及其对股价的影响。"
     },
     {
-      "slug": "cursor",
-      "name": "Cursor",
+      "slug": "amazon",
+      "name": "亚马逊 Amazon",
       "group": "company",
-      "entityId": "cursor",
-      "definition": "Cursor（Anysphere）的编辑器与编码 Agent 动态：产品迭代、自研模型与定价变化。"
+      "entityId": "amazon",
+      "definition": "亚马逊的公司动态：财报与 AWS 云业务、电商与物流、资本开支与监管动态。"
     },
     {
-      "slug": "openrouter",
-      "name": "OpenRouter",
+      "slug": "alphabet",
+      "name": "谷歌 Alphabet",
       "group": "company",
-      "entityId": "openrouter",
-      "definition": "OpenRouter 模型路由平台动态：新模型上架、用量排行与开发者选型的真实市场信号。"
+      "entityId": "alphabet",
+      "definition": "Alphabet 的公司动态：财报与广告业务、Google Cloud、反垄断诉讼与重大产品变化。"
     },
     {
-      "slug": "agent",
-      "name": "Agent 智能体",
+      "slug": "meta",
+      "name": "Meta",
+      "group": "company",
+      "entityId": "meta",
+      "definition": "Meta 的公司动态：财报与广告业务、AI 资本开支、监管与平台政策变化。"
+    },
+    {
+      "slug": "broadcom",
+      "name": "博通 Broadcom",
+      "group": "company",
+      "entityId": "broadcom",
+      "definition": "博通的公司动态：财报与 AI 芯片业务、软件业务整合、半导体板块的联动。"
+    },
+    {
+      "slug": "rates",
+      "name": "利率",
       "group": "field",
       "tags": [
-        "Agent"
+        "利率"
       ],
-      "definition": "让模型自主规划、调用工具、完成多步任务的技术方向——从 Claude Code、Manus 到各家 Agent 框架与评测基准的全部动态。"
+      "definition": "利率的走向与定价：政策利率路径、国债收益率曲线、实际利率与融资成本的变化。"
     },
     {
-      "slug": "coding",
-      "name": "AI 编码",
+      "slug": "inflation",
+      "name": "通胀",
       "group": "field",
       "tags": [
-        "编码"
+        "通胀"
       ],
-      "definition": "AI 写代码的一切：编码助手、Vibe Coding、代码模型评测与开发工作流变革。"
+      "definition": "通胀的读数与走向：CPI、PCE、PPI 等物价数据，以及通胀预期与工资物价循环的讨论。"
     },
     {
-      "slug": "reasoning",
-      "name": "推理能力",
+      "slug": "jobs",
+      "name": "就业",
       "group": "field",
       "tags": [
-        "推理"
+        "就业"
       ],
-      "definition": "模型推理能力的进展：思维链、推理模型、数学与逻辑基准的突破与争议。"
+      "definition": "劳动力市场：非农就业、失业率、薪资增速与裁员动态，及其对政策预期的影响。"
     },
     {
-      "slug": "multimodal",
-      "name": "多模态",
+      "slug": "treasury",
+      "name": "国债",
       "group": "field",
       "tags": [
-        "多模态"
+        "国债"
       ],
-      "definition": "文本之外的能力：视觉理解、图文混合、音视频输入输出的模型与产品进展。"
+      "definition": "美债市场：收益率与拍卖、期限利差、供给与债务上限，以及全球央行的持仓变化。"
     },
     {
-      "slug": "image-gen",
-      "name": "图像生成",
+      "slug": "dollar",
+      "name": "美元",
       "group": "field",
       "tags": [
-        "图像生成"
+        "美元"
       ],
-      "definition": "AI 画图的最前线：文生图模型迭代、图像编辑能力与创作工具生态的全部动态。"
+      "definition": "美元的强弱与影响：美元指数、主要货币对、干预与储备货币地位的讨论。"
     },
     {
-      "slug": "video",
-      "name": "AI 视频",
+      "slug": "gold",
+      "name": "黄金",
       "group": "field",
       "tags": [
-        "视频"
+        "黄金"
       ],
-      "definition": "AI 视频生成与理解：文生视频模型、视频编辑工具与影视创作变革的追踪。"
+      "definition": "黄金市场：金价与央行购金、实际利率与避险需求、黄金股与相关资产的联动。"
     },
     {
-      "slug": "voice",
-      "name": "语音与音频",
+      "slug": "oil",
+      "name": "原油",
       "group": "field",
       "tags": [
-        "语音"
+        "原油"
       ],
-      "definition": "AI 语音与音频的进展：语音合成、实时对话、音乐生成与音频理解的模型与产品。"
+      "definition": "原油市场：油价与 OPEC+ 决定、库存与需求、地缘供给冲击及通胀含义。"
     },
     {
-      "slug": "embodied",
-      "name": "具身智能",
+      "slug": "tech-stocks",
+      "name": "科技股",
       "group": "field",
       "tags": [
-        "具身智能"
+        "科技股"
       ],
-      "definition": "AI 走进物理世界：人形机器人、具身基础模型与真实环境操作能力的进展追踪。"
+      "definition": "大型科技股与科技板块：七巨头走势、板块轮动、AI 叙事对估值的塑造。"
     },
     {
-      "slug": "on-device",
-      "name": "端侧 AI",
+      "slug": "geopolitics",
+      "name": "地缘风险",
       "group": "field",
       "tags": [
-        "端侧"
+        "地缘政治"
       ],
-      "definition": "跑在手机、电脑与边缘设备上的 AI：小模型、本地推理与端侧芯片的进展。"
+      "definition": "影响市场的地缘政治：冲突与制裁、关税与贸易摩擦、供应链与能源安全的风险。"
     },
     {
-      "slug": "open-source",
-      "name": "开源生态",
+      "slug": "market-risk",
+      "name": "市场风险",
       "group": "field",
       "tags": [
-        "开源生态",
-        "开源/仓库"
+        "市场风险",
+        "波动率"
       ],
-      "definition": "开源模型、框架与仓库动态：权重开放、社区项目爆火、开源与闭源的力量消长。"
+      "definition": "市场的风险状态：波动率与恐慌指数、流动性、信用利差与跨资产风险信号。"
     },
     {
-      "slug": "engineering",
-      "name": "部署工程",
+      "slug": "ipo",
+      "name": "IPO 与上市",
       "group": "field",
       "tags": [
-        "部署/工程"
+        "IPO"
       ],
-      "definition": "把模型跑起来的工程实践：推理优化、显存与成本、Serving 架构与基础设施选型。"
+      "definition": "新股发行与退市：大型 IPO、上市规则变化与一二级市场的温度计。"
     },
     {
-      "slug": "data-training",
-      "name": "数据与训练",
+      "slug": "etf-flows",
+      "name": "ETF 资金流",
       "group": "field",
       "tags": [
-        "数据/训练"
+        "ETF资金流"
       ],
-      "definition": "训练侧的门道：数据集构建、合成数据、预训练与后训练方法、算力与训练成本。"
+      "definition": "ETF 的资金进出：规模与份额变化、申赎动向，以及资金流揭示的仓位信号。"
     },
     {
-      "slug": "safety",
-      "name": "安全对齐",
-      "group": "field",
-      "tags": [
-        "安全/对齐"
-      ],
-      "definition": "AI 安全与对齐：越狱与防御、模型行为研究、安全评测与治理框架的进展。"
-    },
-    {
-      "slug": "mcp",
-      "name": "MCP 与工具调用",
-      "group": "field",
-      "tags": [
-        "MCP/工具调用"
-      ],
-      "definition": "模型连接外部世界的协议与实践：MCP 生态、function calling、工具链集成的动态。"
-    },
-    {
-      "slug": "model-releases",
-      "name": "模型发布",
+      "slug": "macro-data",
+      "name": "宏观数据",
       "group": "genre",
       "tags": [
-        "模型发布"
+        "宏观数据"
       ],
-      "definition": "新模型的发布、开源与迭代：大模型厂商的旗舰更新、开源权重放出、性能与价格变化的第一时间记录。"
+      "definition": "宏观读数的第一时间记录：增长、就业、通胀、消费与房地产数据的公布与解读。"
     },
     {
-      "slug": "product-updates",
-      "name": "产品更新",
+      "slug": "central-bank",
+      "name": "央行政策",
       "group": "genre",
       "tags": [
-        "产品更新"
+        "央行政策"
       ],
-      "definition": "AI 产品与应用的功能上新、改版与商业化动态——谁家的产品变强了、变贵了、能用了。"
+      "definition": "央行的政策行动：利率决议、政策声明、点阵图、纪要与缩表安排的持续追踪。"
     },
     {
-      "slug": "papers",
-      "name": "论文研究",
+      "slug": "market-moves",
+      "name": "市场行情",
       "group": "genre",
       "tags": [
-        "论文/研究"
+        "市场行情"
       ],
-      "definition": "值得读的 AI 论文与研究成果：架构创新、训练方法、能力测量与理论进展的精选解读。"
+      "definition": "值得记录的行情：指数与板块的大幅波动、资金流向与市场结构变化。"
     },
     {
-      "slug": "benchmarks",
-      "name": "评测基准",
+      "slug": "earnings",
+      "name": "公司财报",
       "group": "genre",
       "tags": [
-        "评测/基准"
+        "公司财报"
       ],
-      "definition": "模型到底谁强：Benchmark 成绩、评测方法论争议与排行榜变化的持续记录。"
+      "definition": "上市公司的财报与指引：营收利润、展望调整、分红回购与市场的反应。"
     },
     {
-      "slug": "tutorials",
-      "name": "教程实践",
+      "slug": "corporate",
+      "name": "公司动态",
       "group": "genre",
       "tags": [
-        "教程/实践"
+        "公司动态"
       ],
-      "definition": "拿来就能用的实操内容：提示词技巧、工作流搭建、工具用法与踩坑经验。"
+      "definition": "公司的经营动作：并购、人事、产品与供应链变化、劳资与诉讼。"
     },
     {
-      "slug": "opinions",
-      "name": "大佬观点",
-      "group": "genre",
-      "tags": [
-        "大佬观点"
-      ],
-      "definition": "行业关键人物在想什么：创始人访谈、研究者论战、投资人判断的观点集合。"
-    },
-    {
-      "slug": "trends",
-      "name": "现象与趋势",
-      "group": "genre",
-      "tags": [
-        "现象/趋势"
-      ],
-      "definition": "正在发生的行业级变化：使用习惯迁移、能力涌现、社会影响与市场格局的观察。"
-    },
-    {
-      "slug": "industry",
-      "name": "行业动态",
-      "group": "genre",
-      "tags": [
-        "行业动态"
-      ],
-      "definition": "AI 行业的商业脉搏：融资并购、人事变动、合作与竞争、政策与市场信号。"
-    },
-    {
-      "slug": "policy",
+      "slug": "regulation",
       "name": "政策监管",
       "group": "genre",
       "tags": [
         "政策/监管"
       ],
-      "definition": "AI 相关政策法规与政府监管动态：立法进展、出口管制与全球治理框架的追踪。"
+      "definition": "金融监管与产业政策：法规落地、执法行动、反垄断与税收变化的追踪。"
+    },
+    {
+      "slug": "risk-events",
+      "name": "风险事件",
+      "group": "genre",
+      "tags": [
+        "风险事件"
+      ],
+      "definition": "冲击市场的突发事件：地缘冲突、信用违约、机构危机与技术故障及后续处置。"
+    },
+    {
+      "slug": "opinions",
+      "name": "市场观点",
+      "group": "genre",
+      "tags": [
+        "市场观点"
+      ],
+      "definition": "机构和关键人物在想什么：策略报告、多空辩论与访谈观点的集合。"
+    },
+    {
+      "slug": "research",
+      "name": "研究报告",
+      "group": "genre",
+      "tags": [
+        "研究/研报"
+      ],
+      "definition": "值得读的研究：学术研究与机构研报里改变市场认知的发现与方法。"
     }
   ]
 }

@@ -5,6 +5,7 @@ import { cachedPage, loadOr404 } from "../lib/api.server";
 import { pageReuse } from "../lib/page-reuse";
 import { filterParams, itemListLd, listPath, pageMeta, readFilters, siteLd } from "../lib/seo";
 import type { Screen } from "../components/shell/screens";
+import { loadParts } from "../site-modules";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
 import { ActiveFilters, CategoryTabs, FeedBar, SearchField } from "../features/feed/Filters";
@@ -12,6 +13,9 @@ import { ActiveFilters, CategoryTabs, FeedBar, SearchField } from "../features/f
 export const handle: Screen = { tab: "featured", name: "精选" };
 export { pageHeaders as headers } from "../lib/api.server";
 export const { clientLoader, shouldRevalidate } = pageReuse<typeof loader>();
+
+/** The modules' strip above the hot topics: the site's own glance at today's market. */
+const HOME_PARTS = await loadParts((m) => m.home);
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -45,6 +49,10 @@ export default function Home() {
           <SearchField keep={{ category: filters.category }} />
         </div>
       </div>
+
+      {HOME_PARTS.map(({ name, part: Part }) => (
+        <Part key={name} />
+      ))}
 
       {data.hot && <HotTopics entries={data.hot} />}
 
