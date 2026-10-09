@@ -1,35 +1,26 @@
-# Render 部署蓝图：https://dashboard.render.com 选 New → Blueprint，连接本仓库即可。
-# 结构：一个 PostgreSQL + 三个服务（api 内网 / worker 后台任务 / web 公开网站）。
-# sync: false 的密钥在首次创建蓝图时由面板提示填写；generateValue 自动生成随机密钥。
-# 改本文件后在 Render 点 Sync；已存在的环境变量不会被覆盖。
-
-databases:
-  - name: fi-hot-db
-    plan: free
-    postgresMajorVersion: "17"
-    diskSizeGB: 1
-    region: singapore
+# Render 零费用部署蓝图（免费 Web Service + 外部 Neon Postgres，均不绑卡）。
+# https://dashboard.render.com 选 New → Blueprint，连接本仓库。
+# 创建前面板会提示填写 sync:false 的密钥（ADMIN_PASSWORD / DATABASE_URL / LLM_API_KEY / LLM_MODEL）。
+# DATABASE_URL：到 https://neon.tech 用 GitHub 登录建免费项目，复制 pooled connection string 填入。
 
 services:
-  # 内网 API：数据库、模型密钥只在这一层；web 通过内网地址读它
-  - type: pserv
-    name: fi-hot-api
+  - type: web
+    name: fi-hot
     runtime: node
-    plan: starter
+    plan: free
     region: singapore
-    buildCommand: npm ci
-    startCommand: API_HOST=0.0.0.0 API_PORT=$PORT NODE_ENV=production node --env-file-if-exists=.env apps/api/src/main.ts
+    buildCommand: npm ci && npm run build -w @aihot/web
+    startCommand: bash scripts/render-start.sh
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "24"
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: fi-hot-db
-          property: connectionString
+        sync: false
       - key: SITE_URL
-        value: https://fi-hot-web.onrender.com
+        value: https://fi-hot.onrender.com
       - key: SESSION_SECRET
         generateValue: true
       - key: IMG_PROXY_SIGN_SECRET
@@ -46,56 +37,3 @@ services:
         sync: false
       - key: LLM_MODEL
         sync: false
-
-  # 后台 worker：定时采集、模型筛选写作、日报周报
-  - type: worker
-    name: fi-hot-worker
-    runtime: node
-    plan: starter
-    region: singapore
-    buildCommand: npm ci
-    startCommand: NODE_ENV=production node --env-file-if-exists=.env apps/worker/src/main.ts
-    envVars:
-      - key: NODE_VERSION
-        value: "24"
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: fi-hot-db
-          property: connectionString
-      - key: SITE_URL
-        value: https://fi-hot-web.onrender.com
-      - key: COLLECT_ENABLED
-        value: "true"
-      - key: MODEL_CALLS_ENABLED
-        value: "true"
-      - key: LLM_BASE_URL
-        value: https://ark.cn-beijing.volces.com/api/v3
-      - key: LLM_API_KEY
-        sync: false
-      - key: LLM_MODEL
-        sync: false
-
-  # 公开网站：部署前先迁移、再补种子（幂等，只加不删）
-  - type: web
-    name: fi-hot-web
-    runtime: node
-    plan: free
-    region: singapore
-    buildCommand: npm ci && npm run build -w @aihot/web
-    # 免费档不支持 preDeploy：迁移和种子并进入启动命令（迁移有账本、种子幂等，重复执行安全）
-    startCommand: node --env-file-if-exists=.env scripts/migrate.ts && node --env-file-if-exists=.env scripts/seed.ts && WEB_HOST=0.0.0.0 WEB_PORT=$PORT API_BASE_URL=http://$API_HOSTPORT TRUST_PROXY=true node --env-file-if-exists=.env apps/web/server.ts
-    envVars:
-      - key: NODE_VERSION
-        value: "24"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: fi-hot-db
-          property: connectionString
-      # 由 api 服务的内网 host/port 在启动命令里拼成 API_BASE_URL（蓝图不支持变量拼接）
-      - key: API_HOSTPORT
-        fromService:
-          name: fi-hot-api
-          type: pserv
-          property: hostport
