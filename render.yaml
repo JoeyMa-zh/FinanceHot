@@ -85,7 +85,7 @@ services:
     region: singapore
     buildCommand: npm ci && npm run build -w @aihot/web
     # 免费档不支持 preDeploy：迁移和种子并进入启动命令（迁移有账本、种子幂等，重复执行安全）
-    startCommand: node --env-file-if-exists=.env scripts/migrate.ts && node --env-file-if-exists=.env scripts/seed.ts && WEB_HOST=0.0.0.0 WEB_PORT=$PORT API_BASE_URL=http://$API_HOST:$API_PORT TRUST_PROXY=true node --env-file-if-exists=.env apps/web/server.ts
+    startCommand: node --env-file-if-exists=.env scripts/migrate.ts && node --env-file-if-exists=.env scripts/seed.ts && WEB_HOST=0.0.0.0 WEB_PORT=$PORT API_BASE_URL=http://$API_HOSTPORT TRUST_PROXY=true node --env-file-if-exists=.env apps/web/server.ts
     envVars:
       - key: NODE_VERSION
         value: "24"
@@ -94,11 +94,8 @@ services:
           name: fi-hot-db
           property: connectionString
       # 由 api 服务的内网 host/port 在启动命令里拼成 API_BASE_URL（蓝图不支持变量拼接）
-      - key: API_HOST
+      - key: API_HOSTPORT
         fromService:
           name: fi-hot-api
-          property: host
-      - key: API_PORT
-        fromService:
-          name: fi-hot-api
-          property: port
+          type: pserv
+          property: hostport
