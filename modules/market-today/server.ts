@@ -79,6 +79,22 @@ async function onArticleChanged(change: { id: string; kind: string; reduced?: bo
   await enqueueOn(IMPACT_QUEUE, { articleId: change.id });
 }
 
+/**
+ * 周期扫描够格做影响分析的文章并入队。光挂 articleChanged 不够：新文章的首次发布不发该事件
+ * （只有修订与管理操作才发），队列要靠扫描喂。批量一次 20 篇；门槛在运行时再核一遍。
+ */
+async function sweepImpacts(): Promise<{ queued: number }> {
+  if (process.env.MODEL_CALLS_ENABLED !== "true") return { queued: 0 };
+  const rows = await sql<{ article_id: string }[]>`
+    SELECT p.article_id FROM publications p
+    WHERE p.selected AND p.visibility = 'public' AND p.category IS DISTINCT FROM 'opinion'
+      AND p.score >= ${MIN_SCORE()} AND p.published_at > now() - interval '7 days'
+      AND NOT EXISTS (SELECT 1 FROM impact_analyses i WHERE i.article_id = p.article_id)
+    ORDER BY p.score DESC NULLS LAST LIMIT 20`;
+  for (const { article_id } of rows) await enqueueOn(IMPACT_QUEUE, { articleId: article_id });
+  return { queued: rows.length };
+}
+
 // ── HTTP 只读接口 ───────────────────────────────────────────────────────────────────
 
 function registerHttp(app: FastifyInstance): void {
@@ -123,6 +139,12 @@ export default defineServerModule({
       cron: "2-59/5 * * * *",
       when: () => process.env.MARKET_TODAY_QUOTES_ENABLED === "true",
       run: importQuotes,
+    },
+    {
+      // 影响分析扫描：门槛内未分析的高分文章入队（安全阀在 run 里核 MODEL_CALLS_ENABLED）。
+      name: "market-today.impact-sweep",
+      cron: "7-59/10 * * * *",
+      run: sweepImpacts,
     },
   ],
   queues: [IMPACT_QUEUE],
