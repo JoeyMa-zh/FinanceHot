@@ -82,7 +82,7 @@ function parseQuotes(text: string): Map<string, IndexQuote> {
 
 function parseSinaQuotes(text: string): Map<string, IndexQuote> {
   const out = new Map<string, IndexQuote>();
-  for (const m of text.matchAll(/var hq_str_[a-z_]+="([^"]*)"/g)) {
+  for (const m of text.matchAll(/var hq_str_[A-Za-z0-9_]+="([^"]*)"/g)) {
     const f = m[1]!.split(",");
     // 新浪 znb_ 国际指数行：名称,点位,涨跌,涨跌幅,…
     if (f.length >= 4 && Number.isFinite(Number(f[1])) && f[0]) {
@@ -188,6 +188,11 @@ export async function importQuotes(): Promise<{ fearGreed: boolean; indices: num
   if (!snapshot.fearGreed && !snapshot.regions.length && !snapshot.sectors) {
     throw new Error(results.map((r) => (r.status === "rejected" ? String(r.reason) : "")).filter(Boolean).join("; "));
   }
+  // 部分失败保留上次成功的组；失败原因打进日志便于排查信源连通性。
+  const names = ["fear&greed", "indices", "sectors"] as const;
+  results.forEach((r, i) => {
+    if (r.status === "rejected") console.warn(`[market-today] quotes ${names[i]}: ${String(r.reason).slice(0, 300)}`);
+  });
   await sql`
     INSERT INTO market_snapshots (kind, data, updated_at)
     VALUES ('today', ${JSON.stringify(snapshot)}, now())
