@@ -145,21 +145,17 @@ export async function fetchIndices(): Promise<IndexQuote[]> {
 
 // ── 指数走势（页面小走势图） ────────────────────────────────────────────────────────
 
-/** 每个指数的走势来源：A股/港股用腾讯分时（一笔一个代码），美股与日韩欧用 Yahoo chart。
- *  Yahoo 先取当日 5 分钟线，不够 5 个点（未开盘/当地深夜）就退回近 5 日日线。 */
-const TREND_SOURCES: Array<{ name: string; kind: "qq-minute" | "yahoo"; code: string }> = [
+/** 每个指数的走势来源，全部走腾讯：A股/港股当日分时，美股近 5 日日K（腾讯没有美股分时，
+ *  也没有日韩欧指数的K线；Yahoo chart 对数据中心 IP 一律 429，所以日韩欧暂不画线）。 */
+const TREND_SOURCES: Array<{ name: string; kind: "qq-minute" | "qq-kline"; code: string }> = [
   { name: "上证指数", kind: "qq-minute", code: "sh000001" },
   { name: "深证成指", kind: "qq-minute", code: "sz399001" },
   { name: "创业板指", kind: "qq-minute", code: "sz399006" },
   { name: "恒生指数", kind: "qq-minute", code: "hkHSI" },
   { name: "恒生科技指数", kind: "qq-minute", code: "hkHSTECH" },
-  { name: "道琼斯", kind: "yahoo", code: "^DJI" },
-  { name: "纳斯达克", kind: "yahoo", code: "^IXIC" },
-  { name: "标普500", kind: "yahoo", code: "^GSPC" },
-  { name: "日经225", kind: "yahoo", code: "^N225" },
-  { name: "首尔综合指数", kind: "yahoo", code: "^KS11" },
-  { name: "德国DAX30", kind: "yahoo", code: "^GDAXI" },
-  { name: "富时100指数", kind: "yahoo", code: "^FTSE" },
+  { name: "道琼斯", kind: "qq-kline", code: "usDJI" },
+  { name: "纳斯达克", kind: "qq-kline", code: "usIXIC" },
+  { name: "标普500", kind: "qq-kline", code: "usINX" },
 ];
 
 /** 均匀降采样到 ≤60 点，走势形状不变，快照体积可控。 */
@@ -184,24 +180,19 @@ async function qqMinuteTrend(code: string): Promise<number[]> {
   return downsample(prices);
 }
 
-async function yahooTrend(symbol: string): Promise<number[]> {
-  const grab = async (range: string, interval: string): Promise<number[]> => {
-    const res = await guardedFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`, {
-      headers: BROWSER_HEADERS,
-      timeoutMs: 15_000,
-      maxBytes: 1024 * 1024,
-      route: "egress",
-    });
-    if (res.status !== 200) throw new Error(`yahoo ${symbol}: HTTP ${res.status}`);
-    const body = JSON.parse(res.text()) as { chart?: { result?: Array<{ indicators?: { quote?: Array<{ close?: Array<number | null> }> } }> } };
-    const closes = body.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? [];
-    return closes.filter((p): p is number => typeof p === "number" && Number.isFinite(p));
-  };
-  const intraday = await grab("1d", "5m");
-  if (intraday.length >= 5) return downsample(intraday);
-  const daily = await grab("5d", "1d"); // 未开盘/当地深夜：退回近 5 日
-  if (daily.length >= 2) return downsample(daily);
-  throw new Error(`yahoo ${symbol}: no usable points`);
+async function qqKlineTrend(code: string): Promise<number[]> {
+  const res = await guardedFetch(`https://web.ifzq.gtimg.cn/appstock/app/kline/kline?param=${code},day,,,6,`, {
+    headers: { ...BROWSER_HEADERS, referer: "https://gu.qq.com/" },
+    timeoutMs: 15_000,
+    maxBytes: 1024 * 1024,
+    route: "egress",
+  });
+  if (res.status !== 200) throw new Error(`qq kline ${code}: HTTP ${res.status}`);
+  const body = JSON.parse(res.text()) as { data?: Record<string, { day?: string[][] }> };
+  const rows = Object.values(body.data ?? {})[0]?.day ?? [];
+  const closes = rows.map((row) => Number(row[2])).filter((p) => Number.isFinite(p));
+  if (closes.length < 2) throw new Error(`qq kline ${code}: only ${closes.length} days`);
+  return downsample(closes);
 }
 
 /** 拉全部指数的走势；单个指数失败只少它自己的线，全部失败才算这组失败。
@@ -210,7 +201,7 @@ export async function fetchTrends(): Promise<Record<string, number[]>> {
   const out: Record<string, number[]> = {};
   const failures: string[] = [];
   const qq = TREND_SOURCES.filter((s) => s.kind === "qq-minute");
-  const yahoo = TREND_SOURCES.filter((s) => s.kind === "yahoo");
+  const rest = TREND_SOURCES.filter((s) => s.kind !== "qq-minute");
   await Promise.all(
     qq.map(async (s) => {
       try {
@@ -220,9 +211,9 @@ export async function fetchTrends(): Promise<Record<string, number[]>> {
       }
     }),
   );
-  for (const s of yahoo) {
+  for (const s of rest) {
     try {
-      out[s.name] = await yahooTrend(s.code);
+      out[s.name] = s.kind === "qq-kline" ? await qqKlineTrend(s.code) : await qqMinuteTrend(s.code);
     } catch (error) {
       failures.push(`${s.name}: ${String(error instanceof Error ? error.message : error)}`);
     }
