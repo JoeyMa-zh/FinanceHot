@@ -23,28 +23,25 @@ const DIRECTION_QUEUE: ModuleQueue<DirectionJob> = {
   },
 };
 
-/** 判读资格：已发布（publications 里有行）、公开入选、非评论类、非历史回填、还没有判过。 */
-async function shouldQueueDirection(articleId: string): Promise<boolean> {
-  if (!configured()) return false;
-  const [row] = await sql<{ ok: boolean }[]>`
-    SELECT (p.article_id IS NOT NULL) AS ok
-    FROM publications p JOIN articles a ON a.id = p.article_id
-    WHERE p.article_id = ${articleId} AND p.selected AND p.visibility = 'public' AND p.category IS DISTINCT FROM 'opinion'
-      AND a.backfill = false
-      AND NOT EXISTS (SELECT 1 FROM direction_signals d WHERE d.article_id = ${articleId})
-    LIMIT 1`;
-  return !!row?.ok;
-}
-
-async function onArticleChanged(change: { id: string; kind: string; reduced?: boolean }): Promise<void> {
-  if (change.kind !== "content" || change.reduced) return;
-  if (process.env.MODEL_CALLS_ENABLED !== "true") return;
-  if (!(await shouldQueueDirection(change.id))) return;
-  await enqueueOn(DIRECTION_QUEUE, { articleId: change.id });
-}
-
 function configured(): boolean {
   return !!credential("collectors", "TYPESAFE_API_KEY");
+}
+
+/**
+ * 周期扫描待判读的文章并入队。不挂 articleChanged：新文章的首次发布不发该事件（只有修订与
+ * 管理操作才发），队列必须由扫描来喂。批量上限一次 60 篇，让积压在几轮内消化而不是挤占队列。
+ */
+async function sweep(): Promise<{ queued: number }> {
+  if (!configured() || process.env.MODEL_CALLS_ENABLED !== "true") return { queued: 0 };
+  const rows = await sql<{ id: string }[]>`
+    SELECT p.article_id AS id
+    FROM publications p JOIN articles a ON a.id = p.article_id
+    WHERE p.selected AND p.visibility = 'public' AND p.category IS DISTINCT FROM 'opinion'
+      AND a.backfill = false AND a.published_at > now() - interval '7 days'
+      AND NOT EXISTS (SELECT 1 FROM direction_signals d WHERE d.article_id = p.article_id)
+    ORDER BY p.timeline_at DESC LIMIT 60`;
+  for (const { id } of rows) await enqueueOn(DIRECTION_QUEUE, { articleId: id });
+  return { queued: rows.length };
 }
 
 /** 对一篇新闻做方向判读并落库；已判过（并发/重放）就跳过。 */
@@ -72,6 +69,13 @@ async function loadInput(articleId: string): Promise<DirectionInput | null> {
 
 export default defineServerModule({
   name: "direction",
+  schedules: [
+    {
+      name: "direction.sweep",
+      cron: "3-59/10 * * * *",
+      when: () => !!credential("collectors", "TYPESAFE_API_KEY") && process.env.MODEL_CALLS_ENABLED === "true",
+      run: sweep,
+    },
+  ],
   queues: [DIRECTION_QUEUE],
-  on: { articleChanged: onArticleChanged },
 });
