@@ -22,22 +22,85 @@
       "syndicate_fulltext": false
     },
     {
-      "id": "rss-bls-news",
-      "name": "美国劳工统计局（BLS）",
+      "id": "rss-bbc-zh",
+      "name": "BBC 中文",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://www.bls.gov/feed/news_release.rss",
+        "feedUrl": "https://feeds.bbci.co.uk/zhongwen/simp/rss.xml",
         "_aihot": {
           "initialBackfillLimit": 8
         }
       },
-      "tier": "T1",
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒体",
+        "国际"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-dw-zh",
+      "name": "德国之声中文",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://rss.dw.com/rdf/rss-chi-all",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 90,
+      "tags": [
+        "媒体",
+        "国际"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ftzh",
+      "name": "FT 中文网",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.ftchinese.com/rss/feed",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 90,
+      "tags": [
+        "媒体",
+        "国际"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-nytimes-zh",
+      "name": "纽约时报中文网",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://cn.nytimes.com/rss/",
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T2",
       "owner_entity_id": null,
       "participation_mode": "editorial",
       "interval_minutes": 120,
       "tags": [
-        "官方",
-        "数据"
+        "媒体",
+        "国际"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
