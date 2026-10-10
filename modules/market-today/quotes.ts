@@ -151,18 +151,28 @@ function pickBoards(all: Array<{ name: string; changePct: number }>, keys: strin
 }
 
 export async function fetchSectors(): Promise<SectorsSnapshot> {
+  // 东财对海外 IP 的 push2 主域常回 502，按序试常用主机，第一个通的用。
+  const hosts = ["push2.eastmoney.com", "push2delay.eastmoney.com", "82.push2.eastmoney.com"];
   const grab = async (fs: string) => {
-    const res = await guardedFetch(`https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=100&po=1&np=1&fltt=2&fid=f3&fs=${fs}&fields=f14,f3`, {
-      headers: { ...BROWSER_HEADERS, referer: "https://quote.eastmoney.com" },
-      timeoutMs: 15_000,
-      maxBytes: 1024 * 1024,
-      route: "egress",
-    });
-    if (res.status !== 200) throw new Error(`eastmoney boards: HTTP ${res.status}`);
-    const body = JSON.parse(res.text()) as { data?: { diff?: Array<{ f14?: string; f3?: number }> } };
-    return (body.data?.diff ?? [])
-      .filter((d): d is { f14: string; f3: number } => typeof d.f14 === "string" && typeof d.f3 === "number")
-      .map((d) => ({ name: d.f14, changePct: d.f3 }));
+    let last: Error | null = null;
+    for (const host of hosts) {
+      try {
+        const res = await guardedFetch(`https://${host}/api/qt/clist/get?pn=1&pz=100&po=1&np=1&fltt=2&fid=f3&fs=${fs}&fields=f14,f3`, {
+          headers: { ...BROWSER_HEADERS, referer: "https://quote.eastmoney.com" },
+          timeoutMs: 15_000,
+          maxBytes: 1024 * 1024,
+          route: "egress",
+        });
+        if (res.status !== 200) throw new Error(`eastmoney boards (${host}): HTTP ${res.status}`);
+        const body = JSON.parse(res.text()) as { data?: { diff?: Array<{ f14?: string; f3?: number }> } };
+        return (body.data?.diff ?? [])
+          .filter((d): d is { f14: string; f3: number } => typeof d.f14 === "string" && typeof d.f3 === "number")
+          .map((d) => ({ name: d.f14, changePct: d.f3 }));
+      } catch (error) {
+        last = error instanceof Error ? error : new Error(String(error));
+      }
+    }
+    throw last ?? new Error("eastmoney boards: no host reachable");
   };
   const industries = await grab("m:90+t:2");
   const concepts = await grab("m:90+t:3");
