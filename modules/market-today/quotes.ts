@@ -137,9 +137,10 @@ export async function fetchIndices(): Promise<IndexQuote[]> {
   return merged;
 }
 
-/** 页面点名的板块：按名称子串在东财板块列表里挑（列表随全市场，展示固定这一组）。 */
-const INDUSTRY_KEYS = ["半导体", "食品饮料", "白酒", "银行", "证券", "保险", "光伏", "医药", "汽车", "房地产", "通信设备", "软件"];
-const CONCEPT_KEYS = ["人工智能", "CPO", "光模块", "算力", "机器人", "固态电池", "低空经济", "数据要素"];
+/** 页面点名的板块：按名称子串在腾讯板块列表里挑（列表随全市场，展示固定这一组）。
+ *  行业是申万一级（31 个），半导体/AI/CPO 这类细分在概念板块里。 */
+const INDUSTRY_KEYS = ["电子", "计算机", "通信", "食品饮料", "医药生物", "汽车", "银行", "非银金融", "电力设备", "房地产", "有色金属", "传媒"];
+const CONCEPT_KEYS = ["芯片概念", "人工智能", "共封装光模块", "AI算力芯片", "机器人概念", "固态电池", "低空经济", "数据要素", "白酒概念", "国产软件", "光芯片", "云计算"];
 
 function pickBoards(all: Array<{ name: string; changePct: number }>, keys: string[]): Array<{ name: string; changePct: number }> {
   const out: Array<{ name: string; changePct: number }> = [];
@@ -150,33 +151,31 @@ function pickBoards(all: Array<{ name: string; changePct: number }>, keys: strin
   return out;
 }
 
+/** 腾讯财经板块排行（gu.qq.com 网页同款接口，海外可达；东财 push2 对海外 IP 连接层拦截）。
+ *  board_type：hy=行业、gn=概念；每页 100 条，翻到空页为止。 */
 export async function fetchSectors(): Promise<SectorsSnapshot> {
-  // 东财对海外 IP 的 push2 主域常回 502，按序试常用主机，第一个通的用。
-  const hosts = ["push2.eastmoney.com", "push2delay.eastmoney.com", "82.push2.eastmoney.com"];
-  const grab = async (fs: string) => {
-    let last: Error | null = null;
-    for (const host of hosts) {
-      try {
-        const res = await guardedFetch(`https://${host}/api/qt/clist/get?pn=1&pz=100&po=1&np=1&fltt=2&fid=f3&fs=${fs}&fields=f14,f3`, {
-          headers: { ...BROWSER_HEADERS, referer: "https://quote.eastmoney.com" },
-          timeoutMs: 15_000,
-          maxBytes: 1024 * 1024,
-          route: "egress",
-        });
-        if (res.status !== 200) throw new Error(`eastmoney boards (${host}): HTTP ${res.status}`);
-        const body = JSON.parse(res.text()) as { data?: { diff?: Array<{ f14?: string; f3?: number }> } };
-        return (body.data?.diff ?? [])
-          .filter((d): d is { f14: string; f3: number } => typeof d.f14 === "string" && typeof d.f3 === "number")
-          .map((d) => ({ name: d.f14, changePct: d.f3 }));
-      } catch (error) {
-        last = error instanceof Error ? error : new Error(String(error));
+  const grab = async (boardType: string): Promise<Array<{ name: string; changePct: number }>> => {
+    const out: Array<{ name: string; changePct: number }> = [];
+    for (let offset = 0; ; offset += 100) {
+      const res = await guardedFetch(`https://proxy.finance.qq.com/cgi/cgi-bin/rank/pt/getRank?board_type=${boardType}&sort_type=price&direct=down&offset=${offset}&count=100`, {
+        headers: { ...BROWSER_HEADERS, referer: "https://gu.qq.com/" },
+        timeoutMs: 15_000,
+        maxBytes: 1024 * 1024,
+        route: "egress",
+      });
+      if (res.status !== 200) throw new Error(`qq boards ${boardType}: HTTP ${res.status}`);
+      const body = JSON.parse(res.text()) as { data?: { rank_list?: Array<{ name?: string; zdf?: string }> } };
+      const list = body.data?.rank_list ?? [];
+      for (const b of list) {
+        if (typeof b.name === "string" && b.name && Number.isFinite(Number(b.zdf))) out.push({ name: b.name, changePct: Number(b.zdf) });
       }
+      if (list.length < 100) break;
     }
-    throw last ?? new Error("eastmoney boards: no host reachable");
+    if (!out.length) throw new Error(`qq boards ${boardType}: empty list`);
+    return out;
   };
-  const industries = await grab("m:90+t:2");
-  const concepts = await grab("m:90+t:3");
-  if (!industries.length) throw new Error("eastmoney boards: empty industry list");
+  const industries = await grab("hy");
+  const concepts = await grab("gn");
   const sorted = [...industries].sort((a, b) => b.changePct - a.changePct);
   return {
     industries: pickBoards(industries, INDUSTRY_KEYS),
@@ -186,13 +185,14 @@ export async function fetchSectors(): Promise<SectorsSnapshot> {
   };
 }
 
-/** 抓三组数据并写快照；单组失败不影响其他组，全部失败时抛错让 job_runs 记录。 */
+/** 抓三组数据并写快照；单组失败沿用上一次快照的该组（信源偶发失败时不冲掉已有数据），全部失败时抛错让 job_runs 记录。 */
 export async function importQuotes(): Promise<{ fearGreed: boolean; indices: number; sectors: boolean }> {
   const results = await Promise.allSettled([fetchFearGreed(), fetchIndices(), fetchSectors()]);
+  const [previous] = await sql<{ data: QuotesSnapshot }[]>`SELECT data FROM market_snapshots WHERE kind = 'today' LIMIT 1`;
   const snapshot: QuotesSnapshot = {
-    fearGreed: results[0].status === "fulfilled" ? results[0].value : null,
-    regions: results[1].status === "fulfilled" ? groupRegions(results[1].value) : [],
-    sectors: results[2].status === "fulfilled" ? results[2].value : null,
+    fearGreed: results[0].status === "fulfilled" ? results[0].value : (previous?.data.fearGreed ?? null),
+    regions: results[1].status === "fulfilled" ? groupRegions(results[1].value) : (previous?.data.regions ?? []),
+    sectors: results[2].status === "fulfilled" ? results[2].value : (previous?.data.sectors ?? null),
     fetchedAt: new Date().toISOString(),
   };
   if (!snapshot.fearGreed && !snapshot.regions.length && !snapshot.sectors) {

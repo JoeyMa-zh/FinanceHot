@@ -316,7 +316,7 @@ export default function Today() {
               <SectorChips title="领涨行业" boards={data.quotes.sectors.topIndustries} />
               <SectorChips title="领跌行业" boards={data.quotes.sectors.bottomIndustries} />
             </div>
-            <p className="text-[11.5px] text-ink-4">板块口径为东方财富行业/概念板块，涨跌幅为当日实时快照，可能有延迟。</p>
+            <p className="text-[11.5px] text-ink-4">板块口径为腾讯财经申万行业与概念板块，涨跌幅为当日实时快照，可能有延迟。</p>
           </div>
         ) : (
           <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无板块快照。</p>
