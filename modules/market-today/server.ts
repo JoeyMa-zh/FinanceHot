@@ -8,6 +8,7 @@ import { enqueueOn } from "@aihot/backend/jobs/queue";
 import { guardedFetch } from "@aihot/backend/lib/http-fetch";
 import { SITE } from "@aihot/site";
 import { importEvents, normalizeFeedItem, type CalendarEvent } from "./calendar.ts";
+import { importQuotes } from "./quotes.ts";
 import { loadImpactArticle, qualifies, runImpactAnalysis, shouldQueueImpact, MIN_SCORE } from "./impact.ts";
 import { recentImpacts, todayBrief, upcomingEvents, qqqPart } from "./brief.ts";
 
@@ -88,8 +89,7 @@ function registerHttp(app: FastifyInstance): void {
     return send(reply, { events: await upcomingEvents(days, 48), generatedAt: new Date().toISOString() });
   });
 
-  app.get("/api/market-today/brief", async (_req, reply) => send(reply, await todayBrief()));
-}
+  app.get("/api/market-today/brief", async (_req, reply) => send(reply, await todayBrief()));}
 
 // ── QQQ 主题页部件（服务端部分） ────────────────────────────────────────────────────
 
@@ -116,6 +116,13 @@ export default defineServerModule({
       cron: "41 * * * *",
       when: () => process.env.MARKET_TODAY_CALENDAR_ENABLED === "true",
       run: importCalendar,
+    },
+    {
+      // 行情快照：免费公开接口，每 5 分钟一轮（错开整点 2 分起）。
+      name: "market-today.quotes",
+      cron: "2-59/5 * * * *",
+      when: () => process.env.MARKET_TODAY_QUOTES_ENABLED === "true",
+      run: importQuotes,
     },
   ],
   queues: [IMPACT_QUEUE],

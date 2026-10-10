@@ -51,7 +51,111 @@ interface ImpactItem {
 interface Brief {
   events: EventItem[];
   impacts: ImpactItem[];
+  quotes: QuotesSnapshot | null;
   generatedAt: string;
+}
+
+interface QuotesSnapshot {
+  fearGreed: { score: number; rating: string; previousClose: number | null } | null;
+  regions: Array<{ region: string; sentiment: string; indices: Array<{ name: string; price: number; change: number; changePct: number }> }>;
+  sectors: {
+    industries: Array<{ name: string; changePct: number }>;
+    concepts: Array<{ name: string; changePct: number }>;
+    topIndustries: Array<{ name: string; changePct: number }>;
+    bottomIndustries: Array<{ name: string; changePct: number }>;
+  } | null;
+  fetchedAt: string;
+}
+
+/** 中国行情惯例：红涨绿跌。 */
+function pctClass(pct: number): string {
+  if (pct > 0) return "text-red-600";
+  if (pct < 0) return "text-emerald-600";
+  return "text-ink-3";
+}
+
+function pctText(pct: number): string {
+  return `${pct > 0 ? "+" : ""}${pct.toFixed(2)}%`;
+}
+
+const FG_RATING_ZH: Record<string, string> = {
+  "extreme fear": "极度恐惧",
+  fear: "恐惧",
+  neutral: "中性",
+  greed: "贪婪",
+  "extreme greed": "极度贪婪",
+};
+
+const SENTIMENT_COLOR: Record<string, string> = {
+  贪婪: "text-red-600",
+  乐观: "text-red-500",
+  中性: "text-ink-2",
+  谨慎: "text-emerald-500",
+  恐惧: "text-emerald-600",
+};
+
+function FearGreedGauge({ fg }: { fg: NonNullable<QuotesSnapshot["fearGreed"]> }) {
+  const zh = FG_RATING_ZH[fg.rating] ?? fg.rating;
+  return (
+    <div className="card flex items-center gap-4 px-4 py-3">
+      <div className="text-center">
+        <div className={`text-[28px] font-semibold leading-none ${fg.score >= 55 ? "text-red-600" : fg.score <= 45 ? "text-emerald-600" : "text-ink"}`}>{fg.score}</div>
+        <div className="mt-0.5 text-[11px] text-ink-3">{zh}</div>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="relative h-2 rounded-full bg-gradient-to-r from-emerald-500 via-ink-3/40 to-red-500">
+          <span className="absolute top-[-3px] h-3.5 w-1 rounded bg-ink" style={{ left: `calc(${Math.min(100, Math.max(0, fg.score))}% - 2px)` }} />
+        </div>
+        <div className="mt-1 flex justify-between text-[11px] text-ink-4">
+          <span>0 极度恐惧</span>
+          <span>100 极度贪婪</span>
+        </div>
+        {fg.previousClose !== null ? <p className="mt-0.5 text-[12px] text-ink-3">上一收盘 {fg.previousClose}（CNN Fear & Greed，美股口径）</p> : null}
+      </div>
+    </div>
+  );
+}
+
+function RegionCards({ regions }: { regions: QuotesSnapshot["regions"] }) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {regions.map((r) => (
+        <div key={r.region} className="card px-3 py-2">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[13px] font-medium text-ink">{r.region}</span>
+            <span className={`text-[12px] font-medium ${SENTIMENT_COLOR[r.sentiment] ?? "text-ink-2"}`}>{r.sentiment}</span>
+          </div>
+          <ul className="mt-1 space-y-0.5">
+            {r.indices.map((q) => (
+              <li key={q.name} className="flex items-baseline justify-between text-[12.5px]">
+                <span className="text-ink-2">{q.name}</span>
+                <span className="tabular-nums">
+                  <span className="text-ink">{q.price.toLocaleString("en-US")}</span>{" "}
+                  <span className={pctClass(q.changePct)}>{pctText(q.changePct)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectorChips({ title, boards }: { title: string; boards: Array<{ name: string; changePct: number }> }) {
+  if (!boards.length) return null;
+  return (
+    <div>
+      <h4 className="text-[12px] font-medium text-ink-3">{title}</h4>
+      <div className="mt-1 flex flex-wrap gap-1.5">
+        {boards.map((b) => (
+          <span key={b.name} className="rounded border border-line-soft px-2 py-0.5 text-[12px] text-ink">
+            {b.name} <span className={`tabular-nums font-medium ${pctClass(b.changePct)}`}>{pctText(b.changePct)}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export const handle = { name: "今日市场" };
@@ -163,7 +267,7 @@ function ImpactCard({ item }: { item: ImpactItem }) {
         <a href={item.url} rel="nofollow noopener" target="_blank" className="hover:text-accent">
           {item.sourceName}
         </a>
-        。分析由模型根据原文生成，不构成投资建议；本站未接入行情数据，不提供涨跌验证。
+        。分析由模型根据原文生成，不构成投资建议。
       </p>
     </article>
   );
@@ -174,7 +278,51 @@ export default function Today() {
   return (
     <div className="pb-6">
       <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">今日市场</h1>
-      <section aria-labelledby="today-events" className="mt-3">
+      <section aria-labelledby="today-mood" className="mt-3">
+        <h2 id="today-mood" className="text-[16px] font-semibold text-ink">
+          市场贪婪恐惧指数
+        </h2>
+        {data.quotes?.fearGreed ? (
+          <div className="mt-2">
+            <FearGreedGauge fg={data.quotes.fearGreed} />
+          </div>
+        ) : (
+          <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">
+            行情快照未接入或暂无数据。开启 MARKET_TODAY_QUOTES_ENABLED 并等第一轮导入后，这里会显示 CNN 恐惧贪婪指数。
+          </p>
+        )}
+      </section>
+      <section aria-labelledby="today-regions" className="mt-5">
+        <h2 id="today-regions" className="text-[16px] font-semibold text-ink">
+          全球市场情绪
+        </h2>
+        {data.quotes?.regions.length ? (
+          <div className="mt-2">
+            <RegionCards regions={data.quotes.regions} />
+          </div>
+        ) : (
+          <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无全球指数快照。情绪由各区域主指数当天的涨跌幅分档得出。</p>
+        )}
+      </section>
+      <section aria-labelledby="today-sectors" className="mt-5">
+        <h2 id="today-sectors" className="text-[16px] font-semibold text-ink">
+          A 股板块涨跌
+        </h2>
+        {data.quotes?.sectors ? (
+          <div className="card mt-2 space-y-3 px-4 py-3">
+            <SectorChips title="核心行业" boards={data.quotes.sectors.industries} />
+            <SectorChips title="热门概念" boards={data.quotes.sectors.concepts} />
+            <div className="grid gap-3 border-t border-line-soft pt-2 sm:grid-cols-2">
+              <SectorChips title="领涨行业" boards={data.quotes.sectors.topIndustries} />
+              <SectorChips title="领跌行业" boards={data.quotes.sectors.bottomIndustries} />
+            </div>
+            <p className="text-[11.5px] text-ink-4">板块口径为东方财富行业/概念板块，涨跌幅为当日实时快照，可能有延迟。</p>
+          </div>
+        ) : (
+          <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无板块快照。</p>
+        )}
+      </section>
+      <section aria-labelledby="today-events" className="mt-5">
         <div className="flex items-baseline justify-between">
           <h2 id="today-events" className="text-[16px] font-semibold text-ink">
             未来 7 天大事

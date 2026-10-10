@@ -2,6 +2,7 @@
 // 只读已公开（visibility='public'）的精选内容；事件读模块自己的表。全部是纯读，无模型调用。
 import { sql } from "@aihot/backend/db";
 import type { ImpactContent } from "./impact.ts";
+import { loadQuotes } from "./quotes.ts";
 
 export interface EventRow {
   id: number;
@@ -78,9 +79,9 @@ export async function recentTagged(tags: string[], limit: number, days: number):
 }
 
 /** 今日速览：未来 7 天事件（按天去重，每天最多几件高影响的）+ 最近的影响分析。 */
-export async function todayBrief(): Promise<{ events: EventRow[]; impacts: ImpactRow[]; generatedAt: string }> {
-  const [events, impacts] = await Promise.all([upcomingEvents(7), recentImpacts(6)]);
-  return { events, impacts, generatedAt: new Date().toISOString() };
+export async function todayBrief(): Promise<{ events: EventRow[]; impacts: ImpactRow[]; quotes: Awaited<ReturnType<typeof loadQuotes>>; generatedAt: string }> {
+  const [events, impacts, quotes] = await Promise.all([upcomingEvents(7), recentImpacts(6), loadQuotes()]);
+  return { events, impacts, quotes, generatedAt: new Date().toISOString() };
 }
 
 /** QQQ 主题页的部件数据：宏观催化剂（日历）+ 成分股财报/公司动态 + 宏观驱动 + 科技股主线。 */
