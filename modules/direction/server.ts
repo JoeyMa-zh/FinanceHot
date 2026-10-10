@@ -55,7 +55,7 @@ async function judgeArticle(articleId: string): Promise<void> {
   await sql`
     INSERT INTO direction_signals (article_id, direction, scope, confidence, probabilities, model, receipt_id)
     VALUES (${articleId}, ${verdict.direction}, ${verdict.scope}, ${verdict.confidence},
-            ${JSON.stringify(verdict.probabilities)}, ${result.model}, ${result.receiptId})
+            ${sql.json(verdict.probabilities)}, ${result.model}, ${result.receiptId})
     ON CONFLICT (article_id) DO NOTHING`;
 }
 

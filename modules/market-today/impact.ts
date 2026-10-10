@@ -96,7 +96,7 @@ export async function runImpactAnalysis(a: ImpactArticle): Promise<ImpactContent
   if (exists.length) return null; // 一篇一份：重放/重试不重复计费
   const [row] = await sql<{ article_id: string }[]>`
     INSERT INTO impact_analyses (article_id, story_id, content, model, receipt_id)
-    VALUES (${a.articleId}, ${a.storyId}, ${JSON.stringify(res.data)}, ${res.model}, ${res.receiptId})
+    VALUES (${a.articleId}, ${a.storyId}, ${sql.json(res.data)}, ${res.model}, ${res.receiptId})
     ON CONFLICT (article_id) DO NOTHING
     RETURNING article_id`;
   return row ? res.data : null;

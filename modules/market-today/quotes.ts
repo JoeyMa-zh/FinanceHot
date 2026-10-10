@@ -205,7 +205,7 @@ export async function importQuotes(): Promise<{ fearGreed: boolean; indices: num
   });
   await sql`
     INSERT INTO market_snapshots (kind, data, updated_at)
-    VALUES ('today', ${JSON.stringify(snapshot)}, now())
+    VALUES ('today', ${sql.json(snapshot as never)}, now())
     ON CONFLICT (kind) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`;
   return { fearGreed: !!snapshot.fearGreed, indices: snapshot.regions.reduce((n, r) => n + r.indices.length, 0), sectors: !!snapshot.sectors };
 }
