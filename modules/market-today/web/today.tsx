@@ -2,6 +2,8 @@
 // 数据都来自模块只读接口（纯数据库读，页面打开不触发模型调用）。
 import { useLoaderData } from "react-router";
 import { Link } from "react-router";
+import { useEffect, useRef } from "react";
+import { forceCollide, forceRadial, forceSimulation, forceX, forceY, type SimulationNodeDatum } from "d3-force";
 import { SITE } from "@aihot/site";
 import { cachedPage, loadOr404 } from "@aihot/web/lib/api.server";
 import { pageReuse } from "@aihot/web/lib/page-reuse";
@@ -57,13 +59,17 @@ interface Brief {
 
 interface QuotesSnapshot {
   fearGreed: { score: number; rating: string; previousClose: number | null } | null;
-  regions: Array<{ region: string; sentiment: string; indices: Array<{ name: string; price: number; change: number; changePct: number }> }>;
+  regions: Array<{ region: string; sentiment: string; indices: Array<{ name: string; price: number; change: number; changePct: number; trend?: number[] }> }>;
   sectors: {
     industries: Array<{ name: string; changePct: number }>;
     concepts: Array<{ name: string; changePct: number }>;
+    allIndustries: Array<{ name: string; changePct: number }> | null;
     topIndustries: Array<{ name: string; changePct: number }>;
     bottomIndustries: Array<{ name: string; changePct: number }>;
+    topConcepts: Array<{ name: string; changePct: number }> | null;
+    bottomConcepts: Array<{ name: string; changePct: number }> | null;
   } | null;
+  usSectors: Array<{ name: string; changePct: number }> | null;
   fetchedAt: string;
 }
 
@@ -116,6 +122,22 @@ function FearGreedGauge({ fg }: { fg: NonNullable<QuotesSnapshot["fearGreed"]> }
   );
 }
 
+/** 指数小走势图：归一化的折线，颜色跟当日涨跌（红涨绿跌）；没数据就不渲染。 */
+function Sparkline({ pts, up }: { pts: number[] | undefined; up: boolean }) {
+  if (!pts || pts.length < 2) return null;
+  const min = Math.min(...pts);
+  const max = Math.max(...pts);
+  const span = max - min || 1;
+  const path = pts
+    .map((p, i) => `${((i / (pts.length - 1)) * 64).toFixed(1)},${(20 - ((p - min) / span) * 18 + 1).toFixed(1)}`)
+    .join(" ");
+  return (
+    <svg viewBox="0 0 64 22" width="64" height="22" aria-hidden className="shrink-0">
+      <polyline points={path} fill="none" stroke={up ? "#dc2626" : "#059669"} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function RegionCards({ regions }: { regions: QuotesSnapshot["regions"] }) {
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -127,12 +149,13 @@ function RegionCards({ regions }: { regions: QuotesSnapshot["regions"] }) {
           </div>
           <ul className="mt-1 space-y-0.5">
             {r.indices.map((q) => (
-              <li key={q.name} className="flex items-baseline justify-between text-[12.5px]">
+              <li key={q.name} className="flex items-center justify-between gap-2 text-[12.5px]">
                 <span className="text-ink-2">{q.name}</span>
                 <span className="tabular-nums">
                   <span className="text-ink">{q.price.toLocaleString("en-US")}</span>{" "}
                   <span className={pctClass(q.changePct)}>{pctText(q.changePct)}</span>
                 </span>
+                <Sparkline pts={q.trend} up={q.changePct >= 0} />
               </li>
             ))}
           </ul>
@@ -157,6 +180,142 @@ function SectorChips({ title, boards }: { title: string; boards: Array<{ name: s
     </div>
   );
 }
+
+type Board = { name: string; changePct: number };
+
+interface BubbleNode extends SimulationNodeDatum {
+  name: string;
+  changePct: number;
+  r: number;
+  ring: number;
+  el?: SVGGElement;
+}
+
+/**
+ * 泡泡簇（d3-force）：涨跌幅最大的泡在圆心，其余按幅度依次向外包围，碰撞收紧不重叠；
+ * 泡泡可以鼠标/手指拖走，松手后力导向会让它们重新靠拢。viewBox 按收敛后的实际内容取，
+ * 不会出界裁切。
+ */
+function BubbleCluster({ boards, positive }: { boards: Board[]; positive: boolean }) {
+  const ref = useRef<SVGSVGElement | null>(null);
+
+  useEffect(() => {
+    const svg = ref.current;
+    if (!svg) return;
+    const sorted = [...boards].sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct));
+    const max = Math.max(0.01, ...sorted.map((b) => Math.abs(b.changePct)));
+    const nodes: BubbleNode[] = sorted.map((b, i) => ({
+      name: b.name,
+      changePct: b.changePct,
+      r: 20 + 40 * Math.sqrt(Math.abs(b.changePct) / max),
+      // 名次越靠外圈半径越大，第一颗在圆心
+      ring: i === 0 ? 0 : 24 + 96 * Math.sqrt(i / Math.max(1, sorted.length - 1)),
+      x: (Math.random() - 0.5) * 10,
+      y: (Math.random() - 0.5) * 10,
+    }));
+    const sim = forceSimulation(nodes)
+      .force("radial", forceRadial<BubbleNode>((d) => d.ring, 0, 0).strength(0.8))
+      .force("collide", forceCollide<BubbleNode>((d) => d.r).iterations(4))
+      .force("x", forceX(0).strength(0.03))
+      .force("y", forceY(0).strength(0.05))
+      .stop();
+    for (let i = 0; i < 500; i++) sim.tick();
+    const extent = Math.max(10, ...nodes.map((n) => Math.hypot(n.x ?? 0, n.y ?? 0) + n.r)) + 2;
+    svg.setAttribute("viewBox", `${-extent} ${-extent} ${extent * 2} ${extent * 2}`);
+
+    const color = positive ? "#e11d48" : "#059669";
+    const ns = "http://www.w3.org/2000/svg";
+    for (const n of nodes) {
+      const g = document.createElementNS(ns, "g");
+      g.style.cursor = "grab";
+      const circle = document.createElementNS(ns, "circle");
+      circle.setAttribute("r", String(n.r));
+      circle.setAttribute("fill", color);
+      const name = document.createElementNS(ns, "text");
+      name.setAttribute("text-anchor", "middle");
+      name.setAttribute("fill", "#fff");
+      name.setAttribute("font-size", String(Math.max(10, n.r / 4.4)));
+      name.setAttribute("y", n.r > 30 ? String(-n.r / 8) : "0");
+      name.textContent = n.name.length > 8 && n.r < 34 ? `${n.name.slice(0, 7)}…` : n.name;
+      const pct = document.createElementNS(ns, "text");
+      pct.setAttribute("text-anchor", "middle");
+      pct.setAttribute("fill", "#fff");
+      pct.setAttribute("font-weight", "600");
+      pct.setAttribute("font-size", String(Math.max(9, n.r / 4.8)));
+      pct.setAttribute("y", String(n.r / 3));
+      pct.textContent = pctText(n.changePct);
+      if (n.r <= 30) pct.setAttribute("display", "none"); // 小泡放不下两行，悬停看完整值
+      g.append(circle, name, pct);
+      svg.append(g);
+      n.el = g;
+    }
+    const place = () => {
+      for (const n of nodes) n.el?.setAttribute("transform", `translate(${n.x},${n.y})`);
+    };
+    place();
+    sim.on("tick", place);
+
+    // 屏幕 → viewBox 坐标；拖拽把泡钉在指针下，松手交给力导向重新收拢
+    const toXY = (e: PointerEvent): [number, number] => {
+      const rect = svg.getBoundingClientRect();
+      return [((e.clientX - rect.left) / rect.width) * extent * 2 - extent, ((e.clientY - rect.top) / rect.height) * extent * 2 - extent];
+    };
+    for (const n of nodes) {
+      const g = n.el!;
+      g.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        g.setPointerCapture(e.pointerId);
+        g.style.cursor = "grabbing";
+        const [x, y] = toXY(e);
+        n.fx = x;
+        n.fy = y;
+        sim.alphaTarget(0.3).restart();
+      });
+      g.addEventListener("pointermove", (e) => {
+        if (n.fx === null || n.fx === undefined) return;
+        const [x, y] = toXY(e);
+        n.fx = x;
+        n.fy = y;
+      });
+      const release = () => {
+        if (n.fx === null || n.fx === undefined) return;
+        n.fx = null;
+        n.fy = null;
+        g.style.cursor = "grab";
+        sim.alphaTarget(0);
+      };
+      g.addEventListener("pointerup", release);
+      g.addEventListener("pointercancel", release);
+    }
+    return () => {
+      sim.stop();
+      svg.replaceChildren();
+    };
+  }, [boards, positive]);
+
+  return <svg ref={ref} className="mx-auto block w-full touch-none select-none" style={{ maxHeight: 320 }} role="img" aria-label={positive ? "领涨板块泡泡图" : "领跌板块泡泡图"} />;
+}
+
+/** 泡泡池：领涨/领跌各一簇。 */
+function BubblePool({ up, down }: { up: Board[]; down: Board[] }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="rounded border border-line-soft px-3 py-2">
+        <h4 className="text-[11.5px] font-medium text-red-600">↑ 领涨</h4>
+        <BubbleCluster boards={up} positive />
+      </div>
+      <div className="rounded border border-line-soft px-3 py-2">
+        <h4 className="text-[11.5px] font-medium text-emerald-600">↓ 领跌</h4>
+        <BubbleCluster boards={down} positive={false} />
+      </div>
+    </div>
+  );
+}
+
+const splitBoards = (boards: Board[]): { up: Board[]; down: Board[] } => ({
+  up: boards.filter((b) => b.changePct > 0).sort((a, b) => b.changePct - a.changePct),
+  down: boards.filter((b) => b.changePct < 0).sort((a, b) => a.changePct - b.changePct),
+});
 
 export const handle = { name: "今日市场" };
 export const { clientLoader, shouldRevalidate } = pageReuse<typeof loader>();
@@ -309,17 +468,41 @@ export default function Today() {
           A 股板块涨跌
         </h2>
         {data.quotes?.sectors ? (
-          <div className="card mt-2 space-y-3 px-4 py-3">
-            <SectorChips title="核心行业" boards={data.quotes.sectors.industries} />
-            <SectorChips title="热门概念" boards={data.quotes.sectors.concepts} />
-            <div className="grid gap-3 border-t border-line-soft pt-2 sm:grid-cols-2">
-              <SectorChips title="领涨行业" boards={data.quotes.sectors.topIndustries} />
-              <SectorChips title="领跌行业" boards={data.quotes.sectors.bottomIndustries} />
+          <div className="mt-2 space-y-3">
+            <div className="card space-y-3 px-4 py-3">
+              <SectorChips title="核心行业" boards={data.quotes.sectors.industries} />
+              <SectorChips title="热门概念" boards={data.quotes.sectors.concepts} />
             </div>
+            {data.quotes.sectors.allIndustries?.length ? (
+              <div>
+                <h3 className="text-[13px] font-medium text-ink-2">行业领涨 · 领跌（申万一级）</h3>
+                <div className="mt-1.5">
+                  <BubblePool {...splitBoards(data.quotes.sectors.allIndustries)} />
+                </div>
+              </div>
+            ) : (
+              <div className="card grid gap-3 px-4 py-3 sm:grid-cols-2">
+                <SectorChips title="领涨行业" boards={data.quotes.sectors.topIndustries} />
+                <SectorChips title="领跌行业" boards={data.quotes.sectors.bottomIndustries} />
+              </div>
+            )}
             <p className="text-[11.5px] text-ink-4">板块口径为腾讯财经申万行业与概念板块，涨跌幅为当日实时快照，可能有延迟。</p>
           </div>
         ) : (
           <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无板块快照。</p>
+        )}
+      </section>
+      <section aria-labelledby="today-us-sectors" className="mt-5">
+        <h2 id="today-us-sectors" className="text-[16px] font-semibold text-ink">
+          美股板块
+        </h2>
+        {data.quotes?.usSectors?.length ? (
+          <div className="mt-2">
+            <BubblePool {...splitBoards(data.quotes.usSectors)} />
+            <p className="mt-2 text-[11.5px] text-ink-4">口径为 SPDR 行业 ETF（GICS 11 行业）与半导体 SOXX；ETF 涨跌近似对应行业指数。</p>
+          </div>
+        ) : (
+          <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无美股板块快照。</p>
         )}
       </section>
       <section aria-labelledby="today-events" className="mt-5">
