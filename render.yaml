@@ -41,3 +41,8 @@ services:
       # 经济日历（modules/market-today）：开启每小时导入 ForexFactory 免费日历数据
       - key: MARKET_TODAY_CALENDAR_ENABLED
         value: "true"
+      # 方向信号判读（modules/direction，影子模式只入库）：不配 key 则模块空闲
+      - key: TYPESAFE_BASE_URL
+        value: https://api.typesafe.ai/v1
+      - key: TYPESAFE_API_KEY
+        sync: false
