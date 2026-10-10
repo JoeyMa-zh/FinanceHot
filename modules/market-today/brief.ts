@@ -80,7 +80,7 @@ export async function recentTagged(tags: string[], limit: number, days: number):
 
 /** 今日速览：未来 7 天事件（按天去重，每天最多几件高影响的）+ 最近的影响分析。 */
 export async function todayBrief(): Promise<{ events: EventRow[]; impacts: ImpactRow[]; quotes: Awaited<ReturnType<typeof loadQuotes>>; generatedAt: string }> {
-  const [events, impacts, quotes] = await Promise.all([upcomingEvents(7), recentImpacts(6), loadQuotes()]);
+  const [events, impacts, quotes] = await Promise.all([upcomingEvents(7, 48), recentImpacts(6), loadQuotes()]);
   return { events, impacts, quotes, generatedAt: new Date().toISOString() };
 }
 
