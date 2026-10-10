@@ -38,3 +38,6 @@ services:
         sync: false
       - key: LLM_MODEL
         sync: false
+      # 经济日历（modules/market-today）：开启每小时导入 ForexFactory 免费日历数据
+      - key: MARKET_TODAY_CALENDAR_ENABLED
+        value: "true"
