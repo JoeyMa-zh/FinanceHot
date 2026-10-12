@@ -342,7 +342,7 @@ const splitBoards = (boards: Board[]): { up: Board[]; down: Board[] } => ({
   down: boards.filter((b) => b.changePct < 0).sort((a, b) => a.changePct - b.changePct),
 });
 
-export const handle = { name: "今日市场" };
+export const handle = { tab: "market", name: "今日市场" };
 export const { clientLoader, shouldRevalidate } = pageReuse<typeof loader>();
 
 export async function loader({ request }: { request: Request }) {

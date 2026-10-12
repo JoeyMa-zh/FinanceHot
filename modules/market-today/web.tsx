@@ -1,5 +1,5 @@
-// market-today 模块的网页部分：侧边栏入口、首页顶部条与 QQQ 主题页部件。
-import { IconBolt, IconClock } from "../../apps/web/app/components/icons.tsx";
+// market-today 模块的网页部分：侧边栏入口、手机底部“行情”tab、首页顶部条与 QQQ 主题页部件。
+import { IconBolt, IconChart, IconClock } from "../../apps/web/app/components/icons.tsx";
 import { defineWebModule } from "@aihot/web/modules";
 
 export default defineWebModule({
@@ -11,6 +11,7 @@ export default defineWebModule({
       { to: "/calendar", label: "经济日历", icon: IconClock },
     ],
   },
+  tabs: [{ key: "market", to: "/today", label: "行情", icon: IconChart }],
   home: () => import("./web/home-brief.tsx"),
   topicPage: () => import("./web/qqq-block.tsx"),
 });

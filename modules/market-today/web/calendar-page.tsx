@@ -23,7 +23,7 @@ interface EventItem {
   feedUpdatedAt: string | null;
 }
 
-export const handle = { name: "经济日历" };
+export const handle = { tab: "market", name: "经济日历" };
 export const { clientLoader, shouldRevalidate } = pageReuse<typeof loader>();
 
 export async function loader({ request }: { request: Request }) {
