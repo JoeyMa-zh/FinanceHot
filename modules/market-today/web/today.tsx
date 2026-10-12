@@ -519,15 +519,15 @@ export default function Today() {
       </section>
       <section aria-labelledby="today-us-sectors" className="mt-5">
         <h2 id="today-us-sectors" className="text-[16px] font-semibold text-ink">
-          美股板块
+          美股大盘股
         </h2>
         {data.quotes?.usSectors?.length ? (
           <div className="mt-2">
             <BubblePool {...splitBoards(data.quotes.usSectors)} />
-            <p className="mt-2 text-[11.5px] text-ink-4">口径为 SPDR 行业 ETF（GICS 11 行业）与半导体 SOXX；ETF 涨跌近似对应行业指数。</p>
+            <p className="mt-2 text-[11.5px] text-ink-4">纳斯达克 100 市值前 20 成分股，按当日涨跌幅排布；名单随指数季度调整变化时手动更新。</p>
           </div>
         ) : (
-          <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无美股板块快照。</p>
+          <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无美股行情快照。</p>
         )}
       </section>
       <section aria-labelledby="today-events" className="mt-5">

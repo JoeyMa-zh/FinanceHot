@@ -44,7 +44,7 @@ export interface QuotesSnapshot {
   fearGreed: FearGreedSnapshot | null;
   regions: RegionSentiment[];
   sectors: SectorsSnapshot | null;
-  /** 美股行业（SPDR 行业 ETF + 半导体 SOXX），按涨跌幅降序；取不到时为 null。 */
+  /** 美股大公司（纳斯达克 100 市值前 20 成分股），按涨跌幅降序；取不到时为 null。 */
   usSectors: Array<{ name: string; changePct: number }> | null;
   fetchedAt: string;
 }
@@ -273,40 +273,29 @@ export async function fetchSectors(): Promise<SectorsSnapshot> {
   };
 }
 
-/** 美股外围板块：SPDR 行业 ETF（GICS 11 行业）加半导体 SOXX；固定中文标签，按涨跌幅降序展示。 */
-const US_SECTORS: Array<{ code: string; label: string }> = [
-  { code: "usXLK", label: "科技" },
-  { code: "usSOXX", label: "半导体" },
-  { code: "usXLC", label: "通信服务" },
-  { code: "usXLY", label: "可选消费" },
-  { code: "usXLF", label: "金融" },
-  { code: "usXLV", label: "医疗保健" },
-  { code: "usXLI", label: "工业" },
-  { code: "usXLE", label: "能源" },
-  { code: "usXLP", label: "必需消费" },
-  { code: "usXLRE", label: "房地产" },
-  { code: "usXLB", label: "原材料" },
-  { code: "usXLU", label: "公用事业" },
+/** 美股大公司：纳斯达克 100 按市值前 20 的成分股（固定清单，行情每轮快照刷新；名单随季
+ *  度调整变化时手动更新）。腾讯 s_us 代码，返回中文公司名与当日涨跌幅，按涨跌幅降序。 */
+const US_TOP20: string[] = [
+  "s_usAAPL", "s_usMSFT", "s_usNVDA", "s_usAMZN", "s_usGOOGL", "s_usMETA", "s_usAVGO", "s_usTSLA",
+  "s_usCOST", "s_usNFLX", "s_usGOOG", "s_usAMD", "s_usLIN", "s_usPEP", "s_usMU", "s_usINTU",
+  "s_usCSCO", "s_usTMUS", "s_usTXN", "s_usAMGN",
 ];
 
 export async function fetchUsSectors(): Promise<Array<{ name: string; changePct: number }>> {
-  const codes = US_SECTORS.map((s) => `s_${s.code}`).join(",");
-  const res = await guardedFetch(`https://qt.gtimg.cn/q=${codes}`, {
+  const res = await guardedFetch(`https://qt.gtimg.cn/q=${US_TOP20.join(",")}`, {
     headers: { ...BROWSER_HEADERS, referer: "https://gu.qq.com/" },
     timeoutMs: 15_000,
     maxBytes: 512 * 1024,
     route: "egress",
   });
-  if (res.status !== 200) throw new Error(`us sector etfs: HTTP ${res.status}`);
-  const labelByCode = new Map(US_SECTORS.map((s) => [s.code, s.label]));
+  if (res.status !== 200) throw new Error(`us top stocks: HTTP ${res.status}`);
   const out: Array<{ name: string; changePct: number }> = [];
-  for (const m of new TextDecoder("gbk").decode(res.body).matchAll(/v_s_([A-Za-z]+)="([^"]*)"/g)) {
-    const label = labelByCode.get(m[1]!);
+  for (const m of new TextDecoder("gbk").decode(res.body).matchAll(/v_s_us([A-Za-z.]+)="([^"]*)"/g)) {
     const f = m[2]!.split("~");
     // 与指数同一个 s_ 简版行：市场~名称~代码~价~涨跌~涨跌幅
-    if (label && f.length >= 6 && Number.isFinite(Number(f[5]))) out.push({ name: label, changePct: Number(f[5]) });
+    if (f.length >= 6 && f[1] && Number.isFinite(Number(f[5]))) out.push({ name: f[1]!, changePct: Number(f[5]) });
   }
-  if (out.length < 5) throw new Error(`us sector etfs: only ${out.length} parsed`);
+  if (out.length < 10) throw new Error(`us top stocks: only ${out.length} parsed`);
   return out.sort((a, b) => b.changePct - a.changePct);
 }
 
