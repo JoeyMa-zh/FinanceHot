@@ -128,12 +128,29 @@ function Sparkline({ pts, up }: { pts: number[] | undefined; up: boolean }) {
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const span = max - min || 1;
-  const path = pts
-    .map((p, i) => `${((i / (pts.length - 1)) * 64).toFixed(1)},${(20 - ((p - min) / span) * 18 + 1).toFixed(1)}`)
-    .join(" ");
+  const xy = pts.map((p, i) => [((i / (pts.length - 1)) * 64).toFixed(1), (20 - ((p - min) / span) * 18 + 1).toFixed(1)] as const);
+  // 二次贝塞尔平滑：以数据点为控制点、中点为锚点，点少的日K也顺滑
+  let line = `M ${xy[0]![0]},${xy[0]![1]}`;
+  for (let i = 1; i < xy.length - 1; i++) {
+    const [cx, cy] = xy[i]!;
+    const [nx, ny] = xy[i + 1]!;
+    line += ` Q ${cx},${cy} ${((Number(cx) + Number(nx)) / 2).toFixed(1)},${((Number(cy) + Number(ny)) / 2).toFixed(1)}`;
+  }
+  const [lx, ly] = xy.at(-1)!;
+  line += ` L ${lx},${ly}`;
+  const stroke = up ? "#dc2626" : "#059669";
+  const area = `${line} L ${lx},22 L ${xy[0]![0]},22 Z`;
+  const gid = up ? "spark-up" : "spark-down";
   return (
     <svg viewBox="0 0 64 22" width="64" height="22" aria-hidden className="shrink-0">
-      <polyline points={path} fill="none" stroke={up ? "#dc2626" : "#059669"} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={stroke} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={stroke} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gid})`} />
+      <path d={line} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -255,27 +272,35 @@ function BubbleCluster({ boards, positive }: { boards: Board[]; positive: boolea
     place();
     sim.on("tick", place);
 
-    // 屏幕 → viewBox 坐标；拖拽把泡钉在指针下，松手交给力导向重新收拢
+    // 屏幕 → viewBox 坐标。svg 有 maxHeight 且 preserveAspectRatio=meet：内容按 min(宽,高) 等比
+    // 缩放后居中，换算要按这个实际渲染尺寸来，否则 X 轴会偏移。
     const toXY = (e: PointerEvent): [number, number] => {
       const rect = svg.getBoundingClientRect();
-      return [((e.clientX - rect.left) / rect.width) * extent * 2 - extent, ((e.clientY - rect.top) / rect.height) * extent * 2 - extent];
+      const size = Math.min(rect.width, rect.height);
+      const scale = (extent * 2) / size;
+      return [(e.clientX - rect.left - (rect.width - size) / 2) * scale, (e.clientY - rect.top - (rect.height - size) / 2) * scale];
     };
     for (const n of nodes) {
       const g = n.el!;
+      // 记下按下时指针到泡中心的偏移，拖动时泡保持被抓的位置而不是跳到指针中心
+      let grabDX = 0;
+      let grabDY = 0;
       g.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         g.setPointerCapture(e.pointerId);
         g.style.cursor = "grabbing";
         const [x, y] = toXY(e);
-        n.fx = x;
-        n.fy = y;
+        grabDX = x - (n.x ?? 0);
+        grabDY = y - (n.y ?? 0);
+        n.fx = n.x;
+        n.fy = n.y;
         sim.alphaTarget(0.3).restart();
       });
       g.addEventListener("pointermove", (e) => {
         if (n.fx === null || n.fx === undefined) return;
         const [x, y] = toXY(e);
-        n.fx = x;
-        n.fy = y;
+        n.fx = x - grabDX;
+        n.fy = y - grabDY;
       });
       const release = () => {
         if (n.fx === null || n.fx === undefined) return;
