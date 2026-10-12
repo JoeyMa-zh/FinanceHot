@@ -278,6 +278,16 @@ export default function AboutPage() {
         {ABOUT.copyright[1]}
       </p>
 
+      {ABOUT.fork && (
+        <p className="mt-3 px-1 text-[13px] leading-[1.85] text-ink-4">
+          {ABOUT.fork.text[0]}
+          <a href={ABOUT.fork.repoUrl} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
+            {ABOUT.fork.repoName}
+          </a>
+          {ABOUT.fork.text[1]}
+        </p>
+      )}
+
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-[12.5px] text-ink-4">
         <span>{SITE.footerNote}</span>
         <nav className="flex gap-5" aria-label="规则与隐私">

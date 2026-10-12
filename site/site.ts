@@ -163,6 +163,15 @@ export const ABOUT = {
   copyright: [`${SITE.name} 是聚合摘要和阅读索引，原文版权归各来源所有。本站不提供实时行情，内容不构成投资建议。如果你是来源方，希望更正、下架或调整展示方式，可以通过`, "联系我们。"] as [string, string],
   /** 页面底部“使用规则”链接的锚点 id（选填）：外部文档写死过这个锚点就填上，以后不要改。 */
   termsAnchor: null as string | null,
+  /**
+   * 改造出处（选填），null 就不显示：本站从开源项目 AIHOT 改造而来，在关于页注明并感谢原作者。
+   * text 中间那段会渲染成指向 repoUrl 的链接。
+   */
+  fork: {
+    repoName: "AIHOT",
+    repoUrl: "https://github.com/KKKKhazix/AIHOT",
+    text: ["本站基于开源项目 ", " 改造而来，感谢原作者数字生命卡兹克将引擎开源。"] as [string, string],
+  } as null | { repoName: string; repoUrl: string; text: [string, string] },
 } as const;
 
 /** 后台页面上给管理员的提示（选填）。 */
