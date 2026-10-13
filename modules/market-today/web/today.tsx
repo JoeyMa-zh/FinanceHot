@@ -524,7 +524,7 @@ export default function Today() {
         {data.quotes?.usSectors?.length ? (
           <div className="mt-2">
             <BubblePool {...splitBoards(data.quotes.usSectors)} />
-            <p className="mt-2 text-[11.5px] text-ink-4">纳斯达克 100 市值前 20 成分股，按当日涨跌幅排布；名单随指数季度调整变化时手动更新。</p>
+            <p className="mt-2 text-[11.5px] text-ink-4">纳斯达克 100 市值前 20 成分股加闪迪，按当日涨跌幅排布；名单随指数季度调整变化时手动更新。</p>
           </div>
         ) : (
           <p className="card mt-2 px-4 py-3 text-[13px] text-ink-3">暂无美股行情快照。</p>

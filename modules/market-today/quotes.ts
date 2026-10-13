@@ -44,7 +44,7 @@ export interface QuotesSnapshot {
   fearGreed: FearGreedSnapshot | null;
   regions: RegionSentiment[];
   sectors: SectorsSnapshot | null;
-  /** 美股大公司（纳斯达克 100 市值前 20 成分股），按涨跌幅降序；取不到时为 null。 */
+  /** 美股大公司（纳斯达克 100 市值前 20 成分股加闪迪），按涨跌幅降序；取不到时为 null。 */
   usSectors: Array<{ name: string; changePct: number }> | null;
   fetchedAt: string;
 }
@@ -274,11 +274,11 @@ export async function fetchSectors(): Promise<SectorsSnapshot> {
 }
 
 /** 美股大公司：纳斯达克 100 按市值前 20 的成分股（固定清单，行情每轮快照刷新；名单随季
- *  度调整变化时手动更新）。腾讯 s_us 代码，返回中文公司名与当日涨跌幅，按涨跌幅降序。 */
+ *  度调整变化时手动更新）加站长点名的闪迪。腾讯 s_us 代码，返回中文公司名与当日涨跌幅，按涨跌幅降序。 */
 const US_TOP20: string[] = [
   "s_usAAPL", "s_usMSFT", "s_usNVDA", "s_usAMZN", "s_usGOOGL", "s_usMETA", "s_usAVGO", "s_usTSLA",
   "s_usCOST", "s_usNFLX", "s_usGOOG", "s_usAMD", "s_usLIN", "s_usPEP", "s_usMU", "s_usINTU",
-  "s_usCSCO", "s_usTMUS", "s_usTXN", "s_usAMGN",
+  "s_usCSCO", "s_usTMUS", "s_usTXN", "s_usAMGN", "s_usSNDK",
 ];
 
 export async function fetchUsSectors(): Promise<Array<{ name: string; changePct: number }>> {
