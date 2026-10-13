@@ -289,32 +289,20 @@ const nextMonth = (label: string) => {
 /**
  * The scheduled run (every half hour): every issue due by `now` that does not exist yet, oldest first.
  * The newest one appears at the first run after it falls due (above); a long stop or an older gap is
- * filled too. A kind with no issue yet only gets its latest due one. An issue that failed before the
- * first issue of its kind was written is retried as well: it sits before every saved key, so the loop
- * would otherwise start after it, and the missing-edition alert — which counts from the first run, not
- * from the first issue — would report it forever. The floor is that alert's own start, itself bounded
- * to its 7-day window, so windows older than the alert never retry and a first run never backfills.
- * An issue that fails does not hold up the others; at most `limit` issues are written per run.
+ * filled too. A kind with no issue yet only gets its latest due one. An issue that fails does not hold
+ * up the others; at most `limit` issues are written per run, the next run continues.
  */
 export async function composeDueReports(now = new Date(), limit = 8): Promise<{ generated: string[]; failed: string[] }> {
   const generated: string[] = [];
   const failed: string[] = [];
-  // Where a kind's issues may start when its first one was never written. Same inputs as the alert's
-  // own start (the first run and the first saved issue), so the retry floor and the alert agree.
-  const [activity] = await sql<{ at: Date | null }[]>`SELECT min(started_at) AS at FROM job_runs WHERE job = 'reports.compose'`;
-  const lookback = addDays(beijingDate(now), -6);
-  const attempted = activity?.at ? beijingDate(activity.at) : null;
-  const floorDate = attempted && attempted > lookback ? attempted : lookback;
-  const kinds: Array<{ kind: ReportKind; due: string; next: (k: string) => string; floor: string; compose: (k: string) => Promise<unknown> }> = [
-    { kind: "daily", due: dueDaily(now), next: (k) => addDays(k, 1), floor: floorDate, compose: composeDaily },
-    { kind: "weekly", due: dueWeekly(now), next: nextWeek, floor: isoWeekLabel(floorDate), compose: composeWeekly },
-    { kind: "monthly", due: dueMonthly(now), next: nextMonth, floor: floorDate.slice(0, 7), compose: composeMonthly },
+  const kinds: Array<{ kind: ReportKind; due: string; next: (k: string) => string; compose: (k: string) => Promise<unknown> }> = [
+    { kind: "daily", due: dueDaily(now), next: (k) => addDays(k, 1), compose: composeDaily },
+    { kind: "weekly", due: dueWeekly(now), next: nextWeek, compose: composeWeekly },
+    { kind: "monthly", due: dueMonthly(now), next: nextMonth, compose: composeMonthly },
   ];
   kinds: for (const k of kinds) {
     const have = new Set((await sql<{ key: string }[]>`SELECT key FROM reports WHERE kind = ${k.kind}`).map((r) => r.key));
-    const earliest = [...have].sort()[0] ?? null;
-    // With no issue of this kind yet, only the latest due one is written (a first run does not backfill).
-    const first = earliest === null ? k.due : k.floor < earliest ? k.floor : earliest;
+    const first = [...have].sort()[0] ?? k.due;
     for (let key = first; key <= k.due; key = k.next(key)) {
       if (have.has(key)) continue;
       if (shutdownSignal.signal.aborted || generated.length >= limit) break kinds;

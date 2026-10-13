@@ -21,7 +21,6 @@ before(async () => {
 beforeEach(async () => {
   await sql`DELETE FROM reports`;
   await sql`DELETE FROM articles WHERE source_id = ${SOURCE}`;
-  await sql`DELETE FROM job_runs WHERE job = 'reports.compose'`;
 });
 after(async () => { await provider.close(); await stopBoss(); await closeDb(); });
 
@@ -74,20 +73,6 @@ test("report publication and its receipt commit together and recovery reuses the
   assert.equal(provider.hits(), calls);
   assert.equal((await report("weekly", "2024-W18")).revision, 1);
   assert.equal((await sql`SELECT status FROM receipts WHERE subject = 'report:weekly:2024-W18'`)[0]!.status, "completed");
-});
-
-test("an issue that failed before the first saved one of its kind is retried, not stranded", async () => {
-  // The first run was on 2024-02-02 and that daily failed (nothing saved); 2024-02-03 was written. The
-  // loop used to start at the earliest saved key, so 02-02 was never retried and the missing-edition
-  // alert — which counts from the first run — reported it forever. The run date is what bounds it.
-  await sql`INSERT INTO job_runs (job, started_at, finished_at, status) VALUES ('reports.compose', ${editionAt("daily", "2024-02-02", 60)}, now(), 'failed')`;
-  const later = await item("2024-02-03");
-  await sql`INSERT INTO reports (kind, key, window_start, window_end, content, generated_at)
-    VALUES ('daily', '2024-02-03', now(), now(), ${sql.json({ sections: [{ label: "行业动态", items: [{ itemId: later, title: later }] }] })}, now())`;
-  await item("2024-02-02");
-  await assert.rejects(composeDueReports(editionAt("daily", "2024-02-03", 3600)), /reports:/);
-  assert.ok(await report("daily", "2024-02-02"), "the earlier missing daily was retried");
-  assert.ok(await report("daily", "2024-02-03"), "the saved one is untouched");
 });
 
 test("empty older gaps cannot starve a later daily, weekly or monthly, and failures remain visible", async () => {
