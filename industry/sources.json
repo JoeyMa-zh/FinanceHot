@@ -480,27 +480,6 @@
       "syndicate_fulltext": false
     },
     {
-      "id": "rss-marketwatch-pulse",
-      "name": "MarketWatch 实时快讯",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://feeds.marketwatch.com/marketwatch/marketpulse/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 30,
-      "tags": [
-        "媒体",
-        "快讯"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
       "id": "rss-economist-finance",
       "name": "经济学人 · 财经",
       "kind": "rss",

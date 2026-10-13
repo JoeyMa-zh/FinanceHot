@@ -32,7 +32,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export function meta() {
-  return pageMeta({ path: "/calendar", title: titled("经济日历：未来 7 天") });
+  return pageMeta({ path: "/calendar", title: titled("经济日历：未来 7 天"), image: "/og/pages/calendar.png" });
 }
 
 /** 高影响在前；同一时刻按名称。 */

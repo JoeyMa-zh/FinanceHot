@@ -41,6 +41,9 @@ services:
       # 经济日历（modules/market-today）：开启每小时导入 ForexFactory 免费日历数据
       - key: MARKET_TODAY_CALENDAR_ENABLED
         value: "true"
+      # 版本名：显示在后台“运行”页和 /api/health，升级后可以确认进程已经换新
+      - key: AIHOT_RELEASE
+        value: "2026-10-13"
       # 今日市场行情快照（免费公开接口，每 5 分钟）
       - key: MARKET_TODAY_QUOTES_ENABLED
         value: "true"

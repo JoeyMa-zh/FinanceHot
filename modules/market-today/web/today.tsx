@@ -351,7 +351,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export function meta() {
-  return pageMeta({ path: "/today", title: titled("今日市场") });
+  return pageMeta({ path: "/today", title: titled("今日市场"), image: "/og/pages/today.png" });
 }
 
 function ImpactCard({ item }: { item: ImpactItem }) {

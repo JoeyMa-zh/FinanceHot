@@ -250,6 +250,8 @@ export const CARDS: Record<string, { kicker: string; title: string; subtitle: st
   daily: { kicker: withSubject("日报"), title: subjectAfter(`每天 ${spokenTime(EDITION_TIMES.daily)}，一份读得完的`, "日报"), subtitle: `${subjectAfter("前一天值得关注的", "动态")}。` },
   weekly: { kicker: withSubject("周报"), title: `一周${REPORTS.entry.noun}，一次看清`, subtitle: "本周的主线、重要数据与值得回看的市场讨论。" },
   monthly: { kicker: withSubject("月报"), title: "一个月的变化", subtitle: "月度主线与关键事件回顾。" },
+  today: { kicker: "今日市场", title: "一屏看完今天该看的行情", subtitle: "贪婪恐惧指数、全球指数情绪与走势、A 股行业与美股大盘股涨跌。" },
+  calendar: { kicker: "经济日历", title: "未来 7 天，哪天有大事", subtitle: "按北京时间分日列出经济数据发布，附美东时间对照与前值预期。" },
   about: { kicker: "关于", title: `关于 ${SITE.name}`, subtitle: SITE.description },
   terms: { kicker: "使用规则", title: `${SITE.name} 使用规则`, subtitle: "网页、API、RSS 与 MCP 的使用范围。" },
   privacy: { kicker: "隐私说明", title: `${SITE.name} 隐私说明`, subtitle: "访问日志、浏览器本地数据与反馈资料的处理方式。" },
