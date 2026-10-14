@@ -83,11 +83,19 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   });
 
-  app.get("/api/health", async (_req, reply) => {
-    const started = Date.now();
-    await sql`SELECT 1`;
-    return reply.header("Cache-Control", "no-store").send({ ok: true, db: "ok", ms: Date.now() - started, release: process.env.AIHOT_RELEASE ?? "dev" });
-  });
+app.get("/api/health", async (req, reply) => {
+  const started = Date.now();
+  const query = req.query as { light?: string; db?: string } | undefined;
+  if (query?.light === "1" || query?.db === "0") {
+    // Lightweight keepalive mode: skip the DB ping so cron-job.org style
+    // keepalives don't consume Neon network-transfer quota and the
+    // response stays tiny (well under cron-job.org's size limit).
+    return reply.header("Cache-Control", "no-store").send({ ok: true, release: process.env.AIHOT_RELEASE ?? "dev" });
+  }
+  await sql`SELECT 1`;
+  return reply.header("Cache-Control", "no-store").send({ ok: true, db: "ok", ms: Date.now() - started, release: process.env.AIHOT_RELEASE ?? "dev" });
+});
+
 
   registerSite(app);
   registerOg(app);
